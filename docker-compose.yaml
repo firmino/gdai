@@ -59,17 +59,7 @@ services:
     depends_on:
       - certbot
       - fastapi-app
-      
-  # Certbot (Obter/Renovar Certificados)
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./infra/certbot/www/:/var/www/certbot/
-      - ./infra/certbot/conf/:/etc/letsencrypt/
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
-    # Renova certificados a cada 12h (Let's Encrypt só libera após 60 dias)
-
-
+     
   fastapi-app:
     build:
       context: .  # assuming your FastAPI app is in the parent directory
