@@ -45,12 +45,38 @@ services:
     networks:
       - app_network
 
+ # Nginx (Proxy Reverso + SSL)
+  nginx:
+    profiles: ["production"] 
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../infra/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../infra/nginx/sites/:/etc/nginx/conf.d/
+      - ../infra/certbot/www/:/var/www/certbot/  # Desafio HTTP do Let's Encrypt
+      - ../infra/certbot/conf/:/etc/letsencrypt/  # Certificados SSL
+    depends_on:
+      - certbot
+      - fastapi-app
+      
+  # Certbot (Obter/Renovar Certificados)
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./infra/certbot/www/:/var/www/certbot/
+      - ./infra/certbot/conf/:/etc/letsencrypt/
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
+    # Renova certificados a cada 12h (Let's Encrypt só libera após 60 dias)
+
+
   fastapi-app:
     build:
       context: .  # assuming your FastAPI app is in the parent directory
       dockerfile: Dockerfile  # you'll need a Dockerfile for your FastAPI app
     ports:
-      - "80:8000"
+      - "8000:8000"
     environment:
       WEAVIATE_URL: "http://weaviate:8080"
       SUPERTOKENS_URL: "http://supertokens:3567"
@@ -59,6 +85,12 @@ services:
       - supertokens
     networks:
       - app_network
+
+
+
+
+
+
 
 volumes:
   weaviate_data:
