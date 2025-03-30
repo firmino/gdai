@@ -14,6 +14,7 @@ jobs:
           host: ${{ secrets.SSH_HOST_DEPLOY }}
           username: ${{ secrets.SSH_USER_DEPLOY }}
           key: ${{ secrets.SSH_PRIVATE_KEY_DEPLOY }}
+          port: ${{ secrets.SSH_PORT_DEPLOY }} 
           script: |
             cd /home/gdai/
             mkdir pasta_teste
