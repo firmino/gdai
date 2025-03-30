@@ -16,6 +16,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY_DEPLOY }}
           port: ${{ secrets.SSH_PORT_DEPLOY }} 
           script: |
-            cd /home/gdai/
+            cd /home/gdai/gdai/
             git pull origin main
             docker-compose up -d --force-recreate
