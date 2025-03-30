@@ -1,0 +1,19 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute SSH Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST_DEPLOY }}
+          username: ${{ secrets.SSH_USER_DEPLOY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_DEPLOY }}
+          script: |
+            cd /home/gdai/
+            mkdir pasta_teste
