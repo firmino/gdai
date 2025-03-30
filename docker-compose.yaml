@@ -1,0 +1,69 @@
+
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: ''
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    networks:
+      - app_network
+
+  supertokens:
+    image: supertokens/supertokens-postgresql:latest
+    restart: unless-stopped
+    ports:
+      - "3567:3567"
+    environment:
+      POSTGRESQL_USER: supertokens
+      POSTGRESQL_PASSWORD: your_supertokens_password
+      POSTGRESQL_DATABASE: supertokens
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: 5432
+    depends_on:
+      - postgres
+    networks:
+      - app_network
+
+  postgres:
+    image: postgres:13-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: supertokens
+      POSTGRES_PASSWORD: your_supertokens_password
+      POSTGRES_DB: supertokens
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  fastapi-app:
+    build:
+      context: .  # assuming your FastAPI app is in the parent directory
+      dockerfile: Dockerfile  # you'll need a Dockerfile for your FastAPI app
+    ports:
+      - "8000:8000"
+    environment:
+      WEAVIATE_URL: "http://weaviate:8080"
+      SUPERTOKENS_URL: "http://supertokens:3567"
+    depends_on:
+      - weaviate
+      - supertokens
+    networks:
+      - app_network
+
+volumes:
+  weaviate_data:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
