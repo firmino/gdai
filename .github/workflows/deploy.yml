@@ -17,4 +17,5 @@ jobs:
           port: ${{ secrets.SSH_PORT_DEPLOY }} 
           script: |
             cd /home/gdai/
-            mkdir pasta_teste
+            git pull origin main
+            docker-compose up -d --force-recreate

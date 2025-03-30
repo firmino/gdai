@@ -50,7 +50,7 @@ services:
       context: .  # assuming your FastAPI app is in the parent directory
       dockerfile: Dockerfile  # you'll need a Dockerfile for your FastAPI app
     ports:
-      - "8000:8000"
+      - "80:8000"
     environment:
       WEAVIATE_URL: "http://weaviate:8080"
       SUPERTOKENS_URL: "http://supertokens:3567"
