@@ -18,4 +18,4 @@ jobs:
           script: |
             cd /home/gdai/gdai/
             git pull origin main
-            docker-compose up -d --force-recreate
+            docker-compose --profile production up -d
