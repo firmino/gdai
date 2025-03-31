@@ -59,6 +59,8 @@ services:
     depends_on:
       - fastapi-app
      
+
+     
   fastapi-app:
     build:
       context: .  # assuming your FastAPI app is in the parent directory
