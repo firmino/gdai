@@ -54,9 +54,9 @@ services:
       - "443:443"
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf
-      
+      - ../certbot/www/:/var/www/certbot/  # pre-created on the server
+      - ../certbot/conf/:/etc/letsencrypt/  # pre-created on the server
     depends_on:
-      - certbot
       - fastapi-app
      
   fastapi-app:
