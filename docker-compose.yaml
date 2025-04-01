@@ -71,8 +71,8 @@ services:
       - "443:443"
     volumes:
       - ./infra/nginx/conf:/etc/nginx/conf.d
-      - ../certbot/config/live/srv774770.hstgr.cloud/fullchain.pem:/etc/letsencrypt
-      - ../certbot/config/live/srv774770.hstgr.cloud/privkey.pem:/etc/letsencrypt
+      #- ./infra/certbot/config/live/srv774770.hstgr.cloud/fullchain.pem:/etc/letsencrypt
+      #- ./infra/certbot/config/live/srv774770.hstgr.cloud/privkey.pem:/etc/letsencrypt
     depends_on:
       - fastapi-app
     networks:
