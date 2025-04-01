@@ -80,8 +80,6 @@ services:
     networks:
       - app_network
     
-
-  
 volumes:
   weaviate_data:
   postgres_data:
