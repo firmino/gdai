@@ -45,29 +45,13 @@ services:
     networks:
       - app_network
 
- # Nginx (Proxy Reverso + SSL)
-  nginx:
-    profiles: ["production"] 
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - nginx_data:/etc/nginx
-      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - fastapi-app
-    networks:
-      - app_network
-     
-
-
   fastapi-app:
+    container_name: fastapi-app
     build:
-      context: .  # assuming your FastAPI app is in the parent directory
-      dockerfile: Dockerfile  # you'll need a Dockerfile for your FastAPI app
-    ports:
-      - "8000:8000"
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - "8000"
     environment:
       WEAVIATE_URL: "http://weaviate:8080"
       SUPERTOKENS_URL: "http://supertokens:3567"
@@ -76,17 +60,31 @@ services:
       - supertokens
     networks:
       - app_network
+  
+  
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/conf:/etc/nginx/conf.d
+      - ../certbot/config/live/srv774770.hstgr.cloud/fullchain.pem:/etc/letsencrypt
+      - ../certbot/config/live/srv774770.hstgr.cloud/privkey.pem:/etc/letsencrypt
+    depends_on:
+      - fastapi
+    networks:
+      - app-network
+    
 
-
-
-
-
+    
 
 
 volumes:
   weaviate_data:
   postgres_data:
-  nginx_data:
 
 networks:
   app_network:
