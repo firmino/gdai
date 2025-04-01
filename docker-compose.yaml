@@ -61,7 +61,7 @@ services:
     networks:
       - app_network
   
-  
+
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -74,7 +74,7 @@ services:
       - ../certbot/config/live/srv774770.hstgr.cloud/fullchain.pem:/etc/letsencrypt
       - ../certbot/config/live/srv774770.hstgr.cloud/privkey.pem:/etc/letsencrypt
     depends_on:
-      - fastapi
+      - fastapi-app
     networks:
       - app-network
     
