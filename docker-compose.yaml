@@ -72,7 +72,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./infra/nginx/gdai.conf:/etc/nginx/conf.d/gdai
+      - ./infra/nginx/gdai.conf:/etc/nginx/conf.d/gdai.conf
       - ../ssl/fullchain.pem:/etc/letsencrypt/fullchain.pem
       - ../ssl/privkey.pem:/etc/letsencrypt/privkey.pem
     depends_on:
