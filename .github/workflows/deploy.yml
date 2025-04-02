@@ -18,4 +18,5 @@ jobs:
           script: |
             cd /home/gdai/gdai/
             git pull origin main
-            docker-compose --profile production up -d
+            docker-compose --profile production down           
+            docker-compose --profile production up -d 
