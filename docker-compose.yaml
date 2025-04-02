@@ -73,9 +73,8 @@ services:
       - "443:443"
     volumes:
       - ./infra/nginx/gdai.conf:/etc/nginx/conf.d/conf
-
-      #- ./infra/certbot/config/live/srv774770.hstgr.cloud/fullchain.pem:/etc/letsencrypt
-      #- ./infra/certbot/config/live/srv774770.hstgr.cloud/privkey.pem:/etc/letsencrypt
+      - ../certbot/config/archive/gdai.site/fullchain1.pem:/etc/letsencrypt
+      - ../certbot/config/archive/gdai.site/privkey1.pem:/etc/letsencrypt
     depends_on:
       - fastapi-app
     networks:
