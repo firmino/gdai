@@ -23,7 +23,6 @@ dev-dependencies = [
 
 
 
-
 [tool.taskipy.tasks]
-test = { cmd = "echo 'comming soon!!' ", help = "runs all unit tests" }
-run = { cmd = "echo 'comming soon!!'", help = "execute server on development mode" } 
+runserver = { cmd = "uvicorn src.api.app:app --reload", help = "Execute FastAPI server in development mode" }
+tests = { cmd = "pytest", help = "Run all unit tests" }
