@@ -95,3 +95,6 @@ class EmbeddingPipeline:
             document.chunks.extend(page_chunks)
             EmbeddingPipeline._embed_chunks(page_chunks, embedding_model)
         return document
+
+
+#TODO: CHANGE FUNCTIONS TO ASYNC FUNCTIONS
