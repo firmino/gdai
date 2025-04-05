@@ -26,14 +26,19 @@ class TextChunk(BaseModel):
     page_number: int = Field(ge=1)  # >= 1
     begin_offset: int = Field(ge=0)  # >= 0
     end_offset: int = Field(ge=0)
-    embedding: list[float] = Field(default_factory=list)
-
+    embedding: list[float] = []
     
     def __str__(self) -> str:
         return (
             f"TextChunk(chunk_id={self.chunk_id}, page_number={self.page_number}, "
             f"offsets=({self.begin_offset}, {self.end_offset}))"
         )
+
+    @field_validator("end_offset")
+    def validate_end_offset(cls, value, values):
+        if value < values.data["begin_offset"]:
+            raise ValueError("end_offset must be greater than or equal to begin_offset")
+        return value
 
 
 class Document(BaseModel):

@@ -1,10 +1,9 @@
 """
 Unit tests for the schema module used in the embedding pipeline.
 """
-
-import pytest
 from src.embedding_pipeline.schema import Document, TextChunk
-
+from src.embedding_pipeline.embedding import JinaEmbeddingModel
+from scipy import spatial
 
 def test_document_initialization():
     """
@@ -32,7 +31,7 @@ def test_document_str():
     chunk_id = "chunk-001"
     text = "This is a test chunk."
     page_number = 1
-    begin_offset = 0
+    begin_offset = 1
     end_offset = len(text)
     chunk = TextChunk(chunk_id=chunk_id, chunk_text=text, page_number=page_number, begin_offset=begin_offset, end_offset=end_offset)
     doc.chunks.append(chunk)
@@ -81,3 +80,27 @@ def test_textchunk_str():
     assert f"chunk_id={chunk_id}" in chunk_str
     assert f"page_number={page_number}" in chunk_str
     assert f"offsets=({begin_offset}, {end_offset})" in chunk_str
+
+
+def test_embedding_creation():
+    """
+    Test the EmbeddingModel class to ensure it correctly embeds text.
+    """
+    embedding_model = JinaEmbeddingModel()
+    texts = ["This is a test text."]
+    embedding = embedding_model.embed_text(texts) 
+    assert isinstance(embedding, list)
+    assert len(embedding) > 0
+
+
+
+def test_embedding_similarity():
+    """
+    Test the similarity calculation between two embeddings.
+    """
+    embedding_model = JinaEmbeddingModel()
+    text1 = "This is a test text."
+    text2 = "This is another test text."
+    embedding = embedding_model.embed_text([text1, text2])
+    similarity = 1.0 - spatial.distance.cosine(embedding[0], embedding[1])  
+    assert 0 <= similarity <= 1 

@@ -1,4 +1,4 @@
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel
 
 
 
@@ -12,15 +12,12 @@ class EmbeddingModel:
         return self.model_name  
 
 
-class MistralEmbeddingModel(EmbeddingModel):
+class JinaEmbeddingModel(EmbeddingModel):
     def __init__(self):
-        model_name = "mistralai/Mistral-7B-v0.1"
-        super().__init__("mistral")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name, device_map="auto")  
+        model_name = "jinaai/jina-embeddings-v3"
+        super().__init__(model_name) 
+        self.model = AutoModel.from_pretrained(model_name, trust_remote_code=True)  
         
-    def embed_text(self, text:str) -> list[float]:
-        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-        outputs = self.model(**inputs)
-        embeddings = outputs.last_hidden_state.mean(dim=1).squeeze().tolist()
-        return embeddings        
+    def embed_text(self, texts:list[str]) -> list[list[float]]:
+        embeddings = self.model.encode( texts, task="text-matching")
+        return embeddings.tolist()        
