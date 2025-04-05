@@ -23,7 +23,7 @@ class TextChunk(BaseModel):
 
     chunk_id: str
     chunk_text: str = Field(min_length=1)
-    page_number: int = Field(ge=1)  # >= 1
+    page_number: int = Field(ge=0)  # >= 0
     begin_offset: int = Field(ge=0)  # >= 0
     end_offset: int = Field(ge=0)
     embedding: list[float] = []

@@ -45,7 +45,9 @@ class EmbeddingPipeline:
         return page_chunks
 
     @staticmethod
-    def _embed_chunks(chunks: list[TextChunk], embedding_model: EmbeddingModel) -> None:
+    async def _embed_chunks(
+        chunks: list[TextChunk], embedding_model: EmbeddingModel
+    ) -> None:
         """
         Generate embeddings for each text chunk using the provided embedding model.
 
@@ -56,11 +58,17 @@ class EmbeddingPipeline:
             chunks (list[TextChunk]): A list of text chunks to embed.
             embedding_model (EmbeddingModel): The model used to generate embeddings.
         """
-        for chunk in chunks:
-            chunk.embedding = embedding_model.embed_text(chunk.chunk_text)
+        batch_size = 64
+        total_chunks = len(chunks)
+        for i in range(0, total_chunks, batch_size):
+            begin_batch = i 
+            end_batch = min(i + batch_size, total_chunks)
+            batch = [chunk.chunk_text for chunk in chunks[begin_batch : i + end_batch]]
+            embeddings = await embedding_model.embed_texts(batch)
+            [chunks[j].embedding.extend(embeddings[j])for j in range(begin_batch, end_batch)]
 
     @staticmethod
-    def apply(
+    async def apply(
         document: Document,
         embedding_model: EmbeddingModel,
         chunk_size: int = 1000,
@@ -92,9 +100,10 @@ class EmbeddingPipeline:
                 chunk_size=chunk_size,
                 overlap=overlap,
             )
+
             document.chunks.extend(page_chunks)
-            EmbeddingPipeline._embed_chunks(page_chunks, embedding_model)
+            await EmbeddingPipeline._embed_chunks(page_chunks, embedding_model)
         return document
 
 
-#TODO: CHANGE FUNCTIONS TO ASYNC FUNCTIONS
+# TODO: CHANGE FUNCTIONS TO ASYNC FUNCTIONS

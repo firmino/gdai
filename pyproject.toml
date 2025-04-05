@@ -5,26 +5,26 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "einops>=0.8.1",
+    "cohere>=5.14.2",
     "fastapi-cli>=0.0.7",
     "fastapi[standard]>=0.115.12",
-    "huggingface-hub>=0.30.1",
+    "pytest-asyncio>=0.26.0",
     "pytest>=8.3.5",
     "python-dotenv>=1.1.0",
-    "sentence-transformers>=4.0.1",
+    "scipy>=1.15.2",
     "streamlit>=1.44.0",
     "taskipy>=1.14.1",
     "weaviate-client>=4.11.3",
 ]
 
+
 [tool.uv]
-dev-dependencies = [
-    "pytest>=8.3.5",
-]
+dev-dependencies = ["pytest>=8.3.5"]
 
 
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::pydantic.warnings.PydanticDeprecatedSince20"]
 
 [tool.taskipy.tasks]
-
 runserver = { cmd = "uvicorn src.api.app:app --reload", help = "Execute FastAPI server in development mode" }
 tests = { cmd = "pytest", help = "Run all unit tests" }
