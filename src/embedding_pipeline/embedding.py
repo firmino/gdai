@@ -36,7 +36,7 @@ class CohereEmbeddingModel(EmbeddingModel):
             input_type=input_type,
             embedding_types=["float"],
         )
-        return res.embeddings[0]
+        return res.embeddings.float_[0]
     
     async def embed_texts(self, texts: list[str]) -> list[float]:
         input_type = "search_document"

@@ -5,11 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "click>=8.1.8",
     "cohere>=5.14.2",
     "fastapi-cli>=0.0.7",
     "fastapi[standard]>=0.115.12",
-    "pytest-asyncio>=0.26.0",
-    "pytest>=8.3.5",
     "python-dotenv>=1.1.0",
     "scipy>=1.15.2",
     "streamlit>=1.44.0",
@@ -19,7 +18,7 @@ dependencies = [
 
 
 [tool.uv]
-dev-dependencies = ["pytest>=8.3.5"]
+dev-dependencies = ["pytest>=8.3.5", "pytest-asyncio>=0.26.0"]
 
 
 [tool.pytest.ini_options]
