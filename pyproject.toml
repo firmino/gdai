@@ -17,13 +17,20 @@ dependencies = [
 ]
 
 
+[tool.ruff]
+line-length = 200
+
 [tool.uv]
 dev-dependencies = ["pytest>=8.3.5", "pytest-asyncio>=0.26.0"]
 
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore::pydantic.warnings.PydanticDeprecatedSince20"]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.taskipy.tasks]
 runserver = { cmd = "uvicorn src.api.app:app --reload", help = "Execute FastAPI server in development mode" }
 tests = { cmd = "pytest", help = "Run all unit tests" }
+
+

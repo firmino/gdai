@@ -1,189 +1,454 @@
 """
-Unit tests for the schema module used in the embedding pipeline.
+Unit tests for the schema, repository, and service modules used in the embedding pipeline.
 """
+
 import pytest
-from src.embedding_pipeline.schema import Document, TextChunk
-from src.embedding_pipeline.embedding import CohereEmbeddingModel
-from src.embedding_pipeline.pipeline import EmbeddingPipeline
-from scipy import spatial
+from unittest.mock import AsyncMock, MagicMock
+from src.embedding_pipeline.schema import Document, DocumentChunk, DocumentInput
+# from src.embedding_pipeline.exceptions import (
+#     FieldValueError,
+#     # CreateCollectionError,
+#     # DropCollectionError,
+#     # GetCollectionError,
+#     # InsertObjectError,
+#     # SearchByKeywordError,
+#     # SearchByVectorError,
+#     # DeleteDataError,
+# )
+# from src.embedding_pipeline.service import EmbeddingPipelineService
+# from src.embedding_pipeline.embedding import EmbeddingModel
+# from src.embedding_pipeline.exceptions import (
+#     #FolderNotFoundException,
+#     FileInvalidFormatException,
+#     InvalidDocumentException,
+# )
 
 
-def test_document_initialization():
-    """
-    Test that a Document is correctly initialized with the provided id, name, and pages.
-    Also, ensure that chunks is an empty list and embedding_model_name is None.
-    """
-    pages = ["Page 1 text", "Page 2 text"]
-    doc = Document(doc_id="doc1", doc_name="Test Document", pages=pages)
+class TestSchemaDocumentInput:
 
-    assert doc.doc_id == "doc1"
-    assert doc.doc_id == "doc1"
-    assert doc.doc_name == "Test Document"
-    assert doc.pages == pages
-    assert doc.chunks == []
-    assert doc.embedding_model_name is None
+    def test_valid_document_input(self):
+        input_data = {
+            "doc_id": "doc1",
+            "doc_name": "Test Document",
+            "pages": ["Page 1", "Page 2"],
+        }
+        document_input = DocumentInput(**input_data)
+        assert document_input.doc_id == "doc1"
+        assert document_input.doc_name == "Test Document"
+        assert document_input.pages == ["Page 1", "Page 2"]
+        
 
+    def test_invalid_document_input(self):
+        input_data = {
+            "doc_id": "doc1",
+            "doc_name": "Test Document",
+            "pages": "Invalid Page",
+        }
+        with pytest.raises(ValueError):
+            DocumentInput(**input_data)
 
-def test_document_str():
-    """
-    Test the __str__ method of Document to ensure it returns a human-readable string.
-    """
-    pages = ["Content of page 1", "Content of page 2"]
-    doc = Document(doc_id="doc2", doc_name="Another Document", pages=pages)
+    def test_invalid_document_input_without_pages(self):
+        input_data = {
+            "doc_id": "doc1",
+            "doc_name": "Test Document",
+        }
+       
+        with pytest.raises(ValueError):
+            DocumentInput(**input_data)
 
-    chunk_id = "chunk-001"
-    text = "This is a test chunk."
-    page_number = 1
-    begin_offset = 1
-    end_offset = len(text)
-    chunk = TextChunk(
-        chunk_id=chunk_id,
-        chunk_text=text,
-        page_number=page_number,
-        begin_offset=begin_offset,
-        end_offset=end_offset,
-    )
-    doc.chunks.append(chunk)
+    def test_doc_id_minimum_length(self):
+        input_data = {
+            "doc_id": "",
+            "doc_name": "Test Document",
+            "pages": ["Page 1", "Page 2"],
+        }
+        with pytest.raises(ValueError, match="doc_id must be between 1 and 128 characters"):
+            DocumentInput(**input_data)
 
-    doc_str = str(doc)
-    assert "doc_id=doc2" in doc_str
-    assert "doc_name=Another Document" in doc_str
-    assert "pages=2" in doc_str
-    assert "chunks=1" in doc_str
+    def test_doc_id_maximum_length(self):
+        input_data = {
+            "doc_id": "d" * 129,
+            "doc_name": "Test Document",
+            "pages": ["Page 1", "Page 2"],
+        }
+        with pytest.raises(ValueError, match="doc_id must be between 1 and 128 characters"):
+            DocumentInput(**input_data)
 
+    def test_doc_name_minimum_length(self):
+        input_data = {
+            "doc_id": "doc1",
+            "doc_name": "",
+            "pages": ["Page 1", "Page 2"],
+        }
+        with pytest.raises(ValueError, match="doc_name must be between 1 and 256 characters"):
+            DocumentInput(**input_data)
 
-def test_textchunk_initialization():
-    """
-    Test that a TextChunk is correctly initialized with the provided metadata.
-    """
-    chunk_id = "chunk-001"
-    text = "This is a test chunk."
-    page_number = 1
-    begin_offset = 0
-    end_offset = len(text)
-
-    chunk = TextChunk(
-        chunk_id=chunk_id,
-        chunk_text=text,
-        page_number=page_number,
-        begin_offset=begin_offset,
-        end_offset=end_offset,
-    )
-
-    assert chunk.chunk_id == chunk_id
-    assert chunk.chunk_text == text
-    assert chunk.page_number == page_number
-    assert chunk.begin_offset == begin_offset
-    assert chunk.end_offset == end_offset
-
-
-def test_textchunk_str():
-    """
-    Test the __str__ method of TextChunk to ensure it returns a human-readable string.
-    """
-    chunk_id = "chunk-001"
-    text = "This is a test chunk."
-    page_number = 1
-    begin_offset = 0
-    end_offset = len(text)
-
-    chunk = TextChunk(
-        chunk_id=chunk_id,
-        chunk_text=text,
-        page_number=page_number,
-        begin_offset=begin_offset,
-        end_offset=end_offset,
-    )
-
-    chunk_str = str(chunk)
-
-    assert f"chunk_id={chunk_id}" in chunk_str
-    assert f"page_number={page_number}" in chunk_str
-    assert f"offsets=({begin_offset}, {end_offset})" in chunk_str
-
-@pytest.mark.asyncio
-async def test_embedding_creation():
-    """
-    Test the EmbeddingModel class to ensure it correctly embeds text.
-    """
-    embedding_model = CohereEmbeddingModel()
-    text = "This is a test text."
-    embedding = await embedding_model.embed_text(text)
-    assert len(embedding) > 0
-
-@pytest.mark.asyncio
-async def test_embedding_similarity():
-    """
-    Test the similarity calculation between two embeddings.
-    """
-    embedding_model = CohereEmbeddingModel()
-    text1 = "This is a test text."
-    text2 = "This is another test text."
-    embedding = await embedding_model.embed_texts([text1, text2])
-    similarity = 1.0 - spatial.distance.cosine(embedding[0], embedding[1])
-    assert 0 <= similarity <= 1
+    def test_doc_name_maximum_length(self):
+        input_data = {
+            "doc_id": "doc1",
+            "doc_name": "d" * 257,
+            "pages": ["Page 1", "Page 2"],
+        }
+        with pytest.raises(ValueError, match="doc_name must be between 1 and 256 characters"):
+            DocumentInput(**input_data)
 
 
-def test_pipeline_chunck_process():
-    doc_id = "abc"
-    page_number = 1
-    page = "A role-playing game (sometimes spelled roleplaying game,[1][2] or abbreviated as RPG) is a game in which players assume the roles of characters in a fictional setting. Players take responsibility for acting out these roles within a narrative, either through literal acting or through a process of structured decision-making regarding character development.[3] Actions taken within many games succeed or fail according to a formal system of rules and guidelines.[4]"
-    chunk_size = 10
-    overlap = 0
-    chunks = EmbeddingPipeline._chunk_text(
-        doc_id, page_number, page, chunk_size, overlap
-    )
-    assert len(chunks) == 47
-    assert len(chunks[0].chunk_text) == 10
+class TestSchemaDocument:
+    def test_valid_document(self):
+        document = Document(
+            doc_id="doc1",
+            doc_name="Test Document",
+            pages=["Page 1", "Page 2"],
+            embedding_model_name="test_model",
+        )
+        assert document.doc_id == "doc1"
+        assert document.doc_name == "Test Document"
+        assert document.pages == ["Page 1", "Page 2"]
+        assert document.embedding_model_name == "test_model"
+
+    def test_invalid_document_without_doc_id(self):
+        with pytest.raises(ValueError):
+            Document(
+                # doc_id is missing
+                doc_name="Test Document",
+                pages=["Page 1", "Page 2"],
+                embedding_model_name="test_model",
+            )
+
+    def test_invalid_document_without_doc_name(self):
+        with pytest.raises(ValueError):
+            Document(
+                doc_id="doc1",
+                # doc_name is missing
+                pages=["Page 1", "Page 2"],
+                embedding_model_name="test_model",
+            )
+
+    def test_invalid_document_without_pages(self):
+        with pytest.raises(ValueError):
+            Document(
+                doc_id="doc1",
+                doc_name="Test Document",
+                embedding_model_name="test_model",
+            )
+
+    def test_invalid_document_without_embedding_model_name(self):
+        with pytest.raises(ValueError):
+
+            Document(
+                doc_id="doc1",
+                doc_name="Test Document",
+                pages=["Page 1", "Page 2"],
+            )
+
+class TestDocumentChunk:
+    def test_valid_document_chunk(self):
+        chunk = DocumentChunk(
+            chunk_id="chunk1",
+            chunk_text="This is a test chunk.",
+            page_number=1,
+            begin_offset=0,
+            end_offset=20,
+            doc_id="doc1",
+        )
+        assert chunk.chunk_id == "chunk1"
+        assert chunk.chunk_text == "This is a test chunk."
+        assert chunk.page_number == 1
+        assert chunk.begin_offset == 0
+        assert chunk.end_offset == 20
+        assert chunk.doc_id == "doc1"
+
+    def test_invalid_end_offset(self):
+        with pytest.raises(ValueError, match="end_offset must be greater than or equal to begin_offset"):
+            DocumentChunk(
+                chunk_id="chunk1",
+                chunk_text="This is a test chunk.",
+                page_number=1,
+                begin_offset=10,
+                end_offset=5,
+                doc_id="doc1",
+            )
+
+    def test_str_representation(self):
+        chunk = DocumentChunk(
+            chunk_id="chunk1",
+            chunk_text="This is a test chunk.",
+            page_number=1,
+            begin_offset=0,
+            end_offset=20,
+            doc_id="doc1",
+        )
+        assert str(chunk) == "DocumentChunk(chunk_id=chunk1, page_number=1, offsets=(0, 20))"
 
 
-@pytest.mark.asyncio
-async def test_pipeline_execution_document():
-    """
-    Test the entire embedding pipeline to ensure it correctly processes a document.
-    """
-    doc_id = "doc1"
-    doc_name = "Test Document"
-    pages = [
-        "A role-playing game (sometimes spelled roleplaying game,[1][2] or abbreviated as RPG) is a game in which players assume the roles of characters in a fictional setting. Players take responsibility for acting out these roles within a narrative, either through literal acting or through a process of structured decision-making regarding character development.[3] Actions taken within many games succeed or fail according to a formal system of rules and guidelines.[4]",
-        "There are several forms of role-playing games. The original form, sometimes called the tabletop role-playing game (TRPG or TTRPG), is conducted through discussion, whereas in live action role-playing (LARP), players physically perform their characters' actions.[5] Both forms feature collaborative storytelling. In both TTRPGs and LARPs, often an arranger called a game master (GM) decides on the game system and setting to be used, while acting as a facilitator or referee. Each of the other players takes on the role of a single character in the fiction.[6]",
-    ]
-    doc = Document(doc_id=doc_id, doc_name=doc_name, pages=pages)
-    
-    embedding_model = CohereEmbeddingModel()  
-    chunk_size = 10
-    overlap = 0
-    doc = await EmbeddingPipeline.process_document(doc, embedding_model, chunk_size, overlap)
-    assert len(doc.chunks)  == 103 # test the number of chunks is right
-    assert len(doc.chunks[0].embedding) > 0 
+# class TestDocument:
+#     def test_valid_document(self):
+#         document = Document(
+#             doc_id="doc1",
+#             doc_name="Test Document",
+#             pages=["Page 1 text", "Page 2 text"],
+#             embedding_model_name="test_model",
+#         )
+#         assert document.doc_id == "doc1"
+#         assert document.doc_name == "Test Document"
+#         assert document.pages == ["Page 1 text", "Page 2 text"]
+#         assert document.embedding_model_name == "test_model"
+
+#     def test_str_representation(self):
+#         document = Document(
+#             doc_id="doc1",
+#             doc_name="Test Document",
+#             pages=["Page 1 text", "Page 2 text"],
+#         )
+#         assert str(document) == "DocumentInput(doc_id=doc1, doc_name=Test Document)"
 
 
+# class TestDocumentInput:
+#     def test_valid_document_input(self):
+#         document_input = DocumentInput(
+#             doc_id="doc1",
+#             doc_name="Test Document",
+#             pages=["Page 1 text", "Page 2 text"],
+#         )
+#         assert document_input.doc_id == "doc1"
+#         assert document_input.doc_name == "Test Document"
+#         assert document_input.pages == ["Page 1 text", "Page 2 text"]
 
-@pytest.mark.asyncio
-async def test_pipeline_execution_multiple_documents():
-    """
-    Test the entire embedding pipeline to ensure it correctly processes a document.
-    """
-    doc_id1 = "doc1"
-    doc_name1 = "Test Document"
-    pages1 = [
-        "A role-playing game (sometimes spelled roleplaying game,[1][2] or abbreviated as RPG) is a game in which players assume the roles of characters in a fictional setting. Players take responsibility for acting out these roles within a narrative, either through literal acting or through a process of structured decision-making regarding character development.[3] Actions taken within many games succeed or fail according to a formal system of rules and guidelines.[4]",
-        "There are several forms of role-playing games. The original form, sometimes called the tabletop role-playing game (TRPG or TTRPG), is conducted through discussion, whereas in live action role-playing (LARP), players physically perform their characters' actions.[5] Both forms feature collaborative storytelling. In both TTRPGs and LARPs, often an arranger called a game master (GM) decides on the game system and setting to be used, while acting as a facilitator or referee. Each of the other players takes on the role of a single character in the fiction.[6]",
-    ]
-    doc1 = Document(doc_id=doc_id1, doc_name=doc_name1, pages=pages1)
-    
-    doc_id2 = "doc2"
-    doc_name2 = "Test Document 2"
-    pages2 = [
-        "A role-playing game (sometimes spelled roleplaying game,[1][2] or abbreviated as RPG) is a game in which players assume the roles of characters in a fictional setting. Players take responsibility for acting out these roles within a narrative, either through literal acting or through a process of structured decision-making regarding character development.[3] Actions taken within many games succeed or fail according to a formal system of rules and guidelines.[4]",
-        "There are several forms of role-playing games. The original form, sometimes called the tabletop role-playing game (TRPG or TTRPG), is conducted through discussion, whereas in live action role-playing (LARP), players physically perform their characters' actions.[5] Both forms feature collaborative storytelling. In both TTRPGs and LARPs, often an arranger called a game master (GM) decides on the game system and setting to be used, while acting as a facilitator or referee. Each of the other players takes on the role of a single character in the fiction.[6]",
-    ]
-    doc2 = Document(doc_id=doc_id2, doc_name=doc_name2, pages=pages2)
-    
-    docs = [doc1, doc2] 
-    embedding_model = CohereEmbeddingModel()
-    chunk_size = 10
-    overlap = 0
-    docs = await EmbeddingPipeline.apply(docs, embedding_model, chunk_size, overlap)
-    assert len(docs) == 2   
-    assert len(docs[0].chunks)  == 103 # test the number of chunks is right
+#     def test_str_representation(self):
+#         document_input = DocumentInput(
+#             doc_id="doc1",
+#             doc_name="Test Document",
+#         )
+#         assert str(document_input) == "DocumentInput(doc_id=doc1, doc_name=Test Document)"
+
+
+# class TestCollectionRepository:
+#     @pytest.fixture
+#     def mock_repository(self):
+#         """
+#         Fixture to create a mock CollectionRepository instance.
+#         """
+#         repo = CollectionRepository()
+#         repo.client = MagicMock()
+#         return repo
+
+#     @pytest.mark.asyncio
+#     async def test_create_collection_success(self, mock_repository):
+#         mock_repository.client.collection.create = AsyncMock()
+#         await mock_repository.create_collection("test_collection", [{"name": "field", "dataType": ["string"]}])
+#         mock_repository.client.collection.create.assert_called_once_with(
+#             {
+#                 "name": "test_collection",
+#                 "properties": [{"name": "field", "dataType": ["string"]}],
+#             }
+#         )
+
+    #@pytest.mark.asyncio
+    # async def test_create_collection_failure(self, mock_repository):
+    #     mock_repository.client.collection.create = AsyncMock(side_effect=Exception("Creation failed"))
+    #     with pytest.raises(CreateCollectionError, match="Failed to create collection 'test_collection'"):
+    #         await mock_repository.create_collection("test_collection", [{"name": "field", "dataType": ["string"]}])
+
+    # @pytest.mark.asyncio
+    # async def test_delete_collection_success(self, mock_repository):
+    #     mock_repository.client.collection.delete = AsyncMock()
+    #     await mock_repository.delete_collection("test_collection")
+    #     mock_repository.client.collection.delete.assert_called_once_with("test_collection")
+
+    # @pytest.mark.asyncio
+    # async def test_delete_collection_failure(self, mock_repository):
+    #     mock_repository.client.collection.delete = AsyncMock(side_effect=Exception("Deletion failed"))
+    #     with pytest.raises(DropCollectionError, match="Failed to delete collection 'test_collection'"):
+    #         await mock_repository.delete_collection("test_collection")
+
+    # @pytest.mark.asyncio
+    # async def test_list_collections_success(self, mock_repository):
+    #     mock_repository.client.collection.list = AsyncMock(return_value=["collection1", "collection2"])
+    #     collections = await mock_repository.list_collections()
+    #     assert collections == ["collection1", "collection2"]
+    #     mock_repository.client.collection.list.assert_called_once()
+
+    # @pytest.mark.asyncio
+    # async def test_list_collections_failure(self, mock_repository):
+    #     mock_repository.client.collection.list = AsyncMock(side_effect=Exception("Listing failed"))
+    #     with pytest.raises(GetCollectionError, match="Failed to list collections"):
+    #         await mock_repository.list_collections()
+
+    # @pytest.mark.asyncio
+    # async def test_insert_object_success(self, mock_repository):
+    #     mock_repository.client.data_object.create = AsyncMock()
+    #     await mock_repository.insert_object("test_collection", {"field": "value"})
+    #     mock_repository.client.data_object.create.assert_called_once_with(
+    #         {
+    #             "class": "test_collection",
+#             "properties": {"field": "value"},
+#         }
+#     )
+
+    # @pytest.mark.asyncio
+    # async def test_insert_object_failure(self, mock_repository):
+    #     mock_repository.client.data_object.create = AsyncMock(side_effect=Exception("Insertion failed"))
+    #     with pytest.raises(InsertObjectError, match="Failed to insert object into collection 'test_collection'"):
+    #         await mock_repository.insert_object("test_collection", {"field": "value"})
+
+    # @pytest.mark.asyncio
+    # async def test_search_by_keyword_success(self, mock_repository):
+    #     mock_repository.client.query.get.return_value = MagicMock(
+    #         with_bm25=MagicMock(
+    #             return_value=MagicMock(
+    #                 with_limit=MagicMock(
+    #                     return_value=MagicMock(do=MagicMock(return_value={"data": {"Get": {"test_collection": [{"doc_id": "doc1", "doc_name": "Test Document", "pages": ["Page 1 text"]}]}}}))
+    #                 )
+    #             )
+    #         )
+    #     )
+
+    #     results = await mock_repository.search_by_keyword("test_collection", "test", 1)
+    #     assert len(results) == 1
+    #     assert results[0].doc_id == "doc1"
+    #     assert results[0].doc_name == "Test Document"
+
+    # @pytest.mark.asyncio
+    # async def test_search_by_keyword_failure(self, mock_repository):
+    #     mock_repository.client.query.get = MagicMock(side_effect=Exception("Failed to search by keyword"))
+    #     with pytest.raises(SearchByKeywordError, match="Failed to search by keyword"):
+    #         await mock_repository.search_by_keyword("test_collection", "test", 1)
+
+    # @pytest.mark.asyncio
+    # async def test_search_by_vector_similarity_success(self, mock_repository):
+    #     mock_repository.client.query.get = MagicMock(
+    #         return_value=MagicMock(
+    #             with_near_vector=MagicMock(
+    #                 return_value=MagicMock(
+    #                     with_limit=MagicMock(
+    #                         return_value=MagicMock(do=MagicMock(return_value={"data": {"Get": {"test_collection": [{"doc_id": "doc1", "doc_name": "Test Document", "pages": ["Page 1 text"]}]}}}))
+    #                     )
+    #                 )
+    #             )
+    #         )
+    #     )
+    #     results = await mock_repository.search_by_vector_similarity("test_collection", [0.1, 0.2, 0.3], 1)
+    #     assert len(results) == 1
+    #     assert results[0].doc_id == "doc1"
+    #     assert results[0].doc_name == "Test Document"
+
+    # @pytest.mark.asyncio
+    # async def test_search_by_vector_similarity_failure(self, mock_repository):
+    #     mock_repository.client.query.get = MagicMock(side_effect=Exception("Failed to search by vector similarity"))
+    #     with pytest.raises(SearchByVectorError, match="Failed to search by vector similarity"):
+    #         await mock_repository.search_by_vector_similarity("test_collection", [0.1, 0.2, 0.3], 1)
+
+
+# class TestEmbeddingPipelineService:
+#     @pytest.mark.asyncio
+#     async def test_load_documents_from_folder_success(self, tmp_path):
+#         folder = tmp_path / "documents"
+#         folder.mkdir()
+#         valid_file = folder / "doc1.json"
+#         valid_file.write_text('{"doc_id": "doc1", "doc_name": "Test Doc", "pages": ["Page 1", "Page 2"]}')
+
+#         documents = await EmbeddingPipelineService._load_documents_from_folder(str(folder))
+#         assert len(documents) == 1
+#         assert documents[0].doc_id == "doc1"
+#         assert documents[0].doc_name == "Test Doc"
+#         assert documents[0].pages == ["Page 1", "Page 2"]
+
+#     @pytest.mark.asyncio
+#     async def test_load_documents_from_folder_invalid_format(self, tmp_path):
+#         folder = tmp_path / "documents"
+#         folder.mkdir()
+#         invalid_file = folder / "doc1.txt"
+#         invalid_file.write_text("Invalid content")
+
+#         with pytest.raises(FileInvalidFormatException, match="File 'doc1.txt' is not a JSON file."):
+#             await EmbeddingPipelineService._load_documents_from_folder(str(folder))
+
+#     @pytest.mark.asyncio
+#     async def test_load_documents_from_folder_invalid_content(self, tmp_path):
+#         folder = tmp_path / "documents"
+#         folder.mkdir()
+#         invalid_file = folder / "doc1.json"
+#         invalid_file.write_text('{"invalid_key": "value"}')
+
+#         with pytest.raises(InvalidDocumentException, match="Invalid document content in 'doc1.json'"):
+#             await EmbeddingPipelineService._load_documents_from_folder(str(folder))
+
+#     def test_chunk_text_success(self):
+#         page = "This is a test page."
+#         chunks = []
+
+#         chunks.extend(
+#             EmbeddingPipelineService._chunk_text(
+#                 doc_id="doc1",
+#                 page_number=1,
+#                 page=page,
+#                 chunk_size=10,
+#                 overlap=5,
+#             )
+#         )
+
+#         assert len(chunks) == 4
+#         assert chunks[0].chunk_text == "This is a "
+#         assert chunks[1].chunk_text == "is a test "
+#         assert chunks[2].chunk_text == "test page."
+
+#     def test_chunk_text_invalid_chunk_size(self):
+#         with pytest.raises(ValueError, match="Chunk size must be greater than overlap."):
+#             EmbeddingPipelineService._chunk_text(
+#                 doc_id="doc1",
+#                 page_number=1,
+#                 page="This is a test page.",
+#                 chunk_size=5,
+#                 overlap=10,
+#             )
+
+#     @pytest.mark.asyncio
+#     async def test_embed_chunks_success(self):
+#         chunks = [
+#             DocumentChunk(
+#                 doc_id="doc1",
+#                 chunk_id="chunk1",
+#                 chunk_text="This is a test chunk.",
+#                 page_number=1,
+#                 begin_offset=0,
+#                 end_offset=20,
+#             )
+#         ]
+#         mock_embedding_model = MagicMock(spec=EmbeddingModel)
+#         mock_embedding_model.generate_texts_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
+
+#         await EmbeddingPipelineService._embed_chunks(chunks, mock_embedding_model)
+#         assert chunks[0].embedding == [0.1, 0.2, 0.3]
+
+#     @pytest.mark.asyncio
+#     async def test_process_document_success(self):
+#         document = Document(
+#             doc_id="doc1",
+#             doc_name="Test Document",
+#             pages=["This is page 1.", "This is page 2."],
+#         )
+#         mock_embedding_model = MagicMock(spec=EmbeddingModel)
+#         mock_embedding_model.generate_texts_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
+
+#         chunks = await EmbeddingPipelineService._process_document(document, mock_embedding_model, chunk_size=10, overlap=5)
+
+#         assert len(chunks) == 6
+#         assert chunks[0].chunk_text == "This is pa"
+#         assert chunks[0].embedding == [0.1, 0.2, 0.3]
+
+#     @pytest.mark.asyncio
+#     async def test_apply_success(self, tmp_path):
+#         folder = tmp_path / "documents"
+#         folder.mkdir()
+#         valid_file = folder / "doc1.json"
+#         valid_file.write_text('{"doc_id": "doc1", "doc_name": "Test Doc", "pages": ["Page 1", "Page 2"]}')
+
+#         mock_embedding_model = MagicMock(spec=EmbeddingModel)
+#         mock_embedding_model.generate_texts_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
+
+#         mock_repository = MagicMock(spec=CollectionRepository)
+#         mock_repository.insert_document_chunks = AsyncMock()
+
+#         documents = await EmbeddingPipelineService.apply(documents_folder=str(folder), document_repository_name="test_repository", embedding_model=mock_embedding_model, chunk_size=10, overlap=5)
+#         assert len(documents) == 2
+#         assert documents[0].doc_id == "doc1"

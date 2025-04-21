@@ -1,18 +1,26 @@
 import os
 import weaviate
-import WeaviateClient
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class WeaviateDatabase:
     """
-    A class for interacting with a Weaviate database.
+    A class for interacting with a Weaviate database using the async client.
     """
 
     @staticmethod
-    def get_client() -> WeaviateClient:
+    async def get_client():
         """
-        Get the Weaviate client.
+        Get the Weaviate async client.
         """
         weaviate_url = os.environ.get("WEAVIATE_URL")
-        client = weaviate.connect_to_local(hots=weaviate_url)
+        if not weaviate_url:
+            raise ValueError("WEAVIATE_URL environment variable not set.")
+        
+        client = weaviate.AsyncClient(
+            url=weaviate_url,
+            timeout_config=(5, 15),  # Optional: Configure timeouts (connect, read)
+            startup_checks=False  # Skip gRPC health checks during initialization
+        )
         return client
