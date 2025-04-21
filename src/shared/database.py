@@ -1,26 +1,50 @@
 import os
-import weaviate
+import asyncpg
+from pgvector.asyncpg import register_vector
 from dotenv import load_dotenv
 
 load_dotenv()
 
-class WeaviateDatabase:
+
+class PGVectorDatabase:
     """
-    A class for interacting with a Weaviate database using the async client.
+    A class for interacting with a Postgres database using pgvector.
     """
 
+    CONN_POOL = None
+
     @staticmethod
-    async def get_client():
+    async def get_connection_pool():
         """
-        Get the Weaviate async client.
+        Get a connection to the pgvector database and register the vector extension.
+
+        Returns:
+            asyncpg.Connection: A connection to the pgvector database.
         """
-        weaviate_url = os.environ.get("WEAVIATE_URL")
-        if not weaviate_url:
-            raise ValueError("WEAVIATE_URL environment variable not set.")
-        
-        client = weaviate.AsyncClient(
-            url=weaviate_url,
-            timeout_config=(5, 15),  # Optional: Configure timeouts (connect, read)
-            startup_checks=False  # Skip gRPC health checks during initialization
-        )
-        return client
+
+        if PGVectorDatabase.CONN_POOL is None:
+            
+            user = os.environ.get("PGVECTOR_USER")
+            password = os.environ.get("PGVECTOR_PASSWORD")
+            database = os.environ.get("PGVECTOR_DATABASE")
+            host = os.environ.get("PGVECTOR_HOST")
+            port = os.environ.get("PGVECTOR_PORT")
+
+            if not all([user, password, database, host, port]):
+                raise ValueError("One or more PGVECTOR_ environment variables are not set.")
+
+            PGVectorDatabase.CONN_POOL = await asyncpg.create_pool(
+                user=user,
+                password=password,
+                database=database,
+                host=host,
+                port=int(port),
+                min_size=5,
+                max_size=20
+            )
+            connection = await PGVectorDatabase.CONN_POOL.acquire()
+            await register_vector(connection)
+            await PGVectorDatabase.CONN_POOL.release(connection)
+
+        return PGVectorDatabase.CONN_POOL
+    

@@ -5,10 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.30.0",
     "click>=8.1.8",
     "cohere>=5.14.2",
     "fastapi-cli>=0.0.7",
     "fastapi[standard]>=0.115.12",
+    "pgvector>=0.4.0",
     "python-dotenv>=1.1.0",
     "scipy>=1.15.2",
     "streamlit>=1.44.0",
@@ -16,12 +18,14 @@ dependencies = [
     "weaviate-client>=4.11.3",
 ]
 
-
 [tool.ruff]
 line-length = 200
 
 [tool.uv]
-dev-dependencies = ["pytest>=8.3.5", "pytest-asyncio>=0.26.0"]
+dev-dependencies = [
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+]
 
 
 [tool.pytest.ini_options]

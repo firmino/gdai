@@ -3,29 +3,23 @@ Unit tests for the schema, repository, and service modules used in the embedding
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+import pytest_asyncio
+import json
+from unittest.mock import AsyncMock, patch
+from src.embedding_pipeline.embedding import EmbeddingModel
 from src.embedding_pipeline.schema import Document, DocumentChunk, DocumentInput
-# from src.embedding_pipeline.exceptions import (
-#     FieldValueError,
-#     # CreateCollectionError,
-#     # DropCollectionError,
-#     # GetCollectionError,
-#     # InsertObjectError,
-#     # SearchByKeywordError,
-#     # SearchByVectorError,
-#     # DeleteDataError,
-# )
-# from src.embedding_pipeline.service import EmbeddingPipelineService
+from src.embedding_pipeline.repository import DocumentRepository
+
+from src.embedding_pipeline.service import EmbeddingPipelineService
 # from src.embedding_pipeline.embedding import EmbeddingModel
-# from src.embedding_pipeline.exceptions import (
-#     #FolderNotFoundException,
-#     FileInvalidFormatException,
-#     InvalidDocumentException,
-# )
+from src.embedding_pipeline.exceptions import (
+    # FolderNotFoundException,
+    FileInvalidFormatException,
+    InvalidDocumentException,
+)
 
 
 class TestSchemaDocumentInput:
-
     def test_valid_document_input(self):
         input_data = {
             "doc_id": "doc1",
@@ -36,7 +30,6 @@ class TestSchemaDocumentInput:
         assert document_input.doc_id == "doc1"
         assert document_input.doc_name == "Test Document"
         assert document_input.pages == ["Page 1", "Page 2"]
-        
 
     def test_invalid_document_input(self):
         input_data = {
@@ -52,7 +45,7 @@ class TestSchemaDocumentInput:
             "doc_id": "doc1",
             "doc_name": "Test Document",
         }
-       
+
         with pytest.raises(ValueError):
             DocumentInput(**input_data)
 
@@ -134,12 +127,12 @@ class TestSchemaDocument:
 
     def test_invalid_document_without_embedding_model_name(self):
         with pytest.raises(ValueError):
-
             Document(
                 doc_id="doc1",
                 doc_name="Test Document",
                 pages=["Page 1", "Page 2"],
             )
+
 
 class TestDocumentChunk:
     def test_valid_document_chunk(self):
@@ -181,274 +174,203 @@ class TestDocumentChunk:
         assert str(chunk) == "DocumentChunk(chunk_id=chunk1, page_number=1, offsets=(0, 20))"
 
 
-# class TestDocument:
-#     def test_valid_document(self):
-#         document = Document(
-#             doc_id="doc1",
-#             doc_name="Test Document",
-#             pages=["Page 1 text", "Page 2 text"],
-#             embedding_model_name="test_model",
-#         )
-#         assert document.doc_id == "doc1"
-#         assert document.doc_name == "Test Document"
-#         assert document.pages == ["Page 1 text", "Page 2 text"]
-#         assert document.embedding_model_name == "test_model"
+class TestDocumentRepository:
 
-#     def test_str_representation(self):
-#         document = Document(
-#             doc_id="doc1",
-#             doc_name="Test Document",
-#             pages=["Page 1 text", "Page 2 text"],
-#         )
-#         assert str(document) == "DocumentInput(doc_id=doc1, doc_name=Test Document)"
+    @pytest_asyncio.fixture(scope="module") 
+    async def repository(self):  
+        repo = await DocumentRepository.create()
+        yield repo
+        await repo.clean_database()
+        await repo.close_connection_pool()
+    
 
+    @pytest.mark.asyncio(loop_scope="module")
+    async def test_insert_and_get_document(self, repository):
+        # Criação de um documento e seus chunks
+        document = Document(
+            doc_id="doc1",
+            doc_name="Test Document",
+            pages=["Page 1", "Page 2"],
+            embedding_model_name="test_model",
+        )
+        chunks = [
+            DocumentChunk(
+                chunk_id="chunk1",
+                chunk_text="This is a test chunk.",
+                page_number=1,
+                begin_offset=0,
+                end_offset=20,
+                embedding=[0.1] * 1536,
+                doc_id="doc1",
+            ),
+            DocumentChunk(
+                chunk_id="chunk2",
+                chunk_text="Another test chunk.",
+                page_number=2,
+                begin_offset=0,
+                end_offset=25,
+                embedding=[0.4] * 1536,
+                doc_id="doc1",
+            ),
+        ]
 
-# class TestDocumentInput:
-#     def test_valid_document_input(self):
-#         document_input = DocumentInput(
-#             doc_id="doc1",
-#             doc_name="Test Document",
-#             pages=["Page 1 text", "Page 2 text"],
-#         )
-#         assert document_input.doc_id == "doc1"
-#         assert document_input.doc_name == "Test Document"
-#         assert document_input.pages == ["Page 1 text", "Page 2 text"]
+        # Limpa os dados existentes para evitar conflitos
+        await repository.delete_document_content(document_id=document.doc_id)
 
-#     def test_str_representation(self):
-#         document_input = DocumentInput(
-#             doc_id="doc1",
-#             doc_name="Test Document",
-#         )
-#         assert str(document_input) == "DocumentInput(doc_id=doc1, doc_name=Test Document)"
+        # Insere o documento e seus chunks
+        await repository.insert_document(document, chunks)
 
+        # Recupera os metadados do documento
+        docs = await repository.get_document_metadata(document_id=document.doc_id)
 
-# class TestCollectionRepository:
-#     @pytest.fixture
-#     def mock_repository(self):
-#         """
-#         Fixture to create a mock CollectionRepository instance.
-#         """
-#         repo = CollectionRepository()
-#         repo.client = MagicMock()
-#         return repo
+        # Verifica se os dados estão corretos
+        assert docs["id"] == document.doc_id
+        assert docs["name"] == document.doc_name
+        assert len(docs["pages"]) == len(document.pages)
+        assert docs["embedding_model_name"] == document.embedding_model_name
 
-#     @pytest.mark.asyncio
-#     async def test_create_collection_success(self, mock_repository):
-#         mock_repository.client.collection.create = AsyncMock()
-#         await mock_repository.create_collection("test_collection", [{"name": "field", "dataType": ["string"]}])
-#         mock_repository.client.collection.create.assert_called_once_with(
-#             {
-#                 "name": "test_collection",
-#                 "properties": [{"name": "field", "dataType": ["string"]}],
-#             }
-#         )
+    @pytest.mark.asyncio(loop_scope="module")
+    async def test_search_document_by_keyword(self, repository):
+        # Criação de um documento e seus chunks
+        document = Document(
+            doc_id="doc11",
+            doc_name="Test Document",
+            pages=["Page 1", "Page 2"],
+            embedding_model_name="test_model",
+        )
+        chunks = [
+            DocumentChunk(
+                chunk_id="chunk11",
+                chunk_text="This is a test chunk.",
+                page_number=1,
+                begin_offset=0,
+                end_offset=20,
+                embedding=[0.1] * 1536,
+                doc_id="doc11",
+            ),
+            DocumentChunk(
+                chunk_id="chunk21",
+                chunk_text="Another test chunk with keyword.",
+                page_number=2,
+                begin_offset=0,
+                end_offset=25,
+                embedding=[0.4] * 1536,
+                doc_id="doc11",
+            ),
+        ]
 
-    #@pytest.mark.asyncio
-    # async def test_create_collection_failure(self, mock_repository):
-    #     mock_repository.client.collection.create = AsyncMock(side_effect=Exception("Creation failed"))
-    #     with pytest.raises(CreateCollectionError, match="Failed to create collection 'test_collection'"):
-    #         await mock_repository.create_collection("test_collection", [{"name": "field", "dataType": ["string"]}])
+        # Insere o documento e seus chunks
+        await repository.insert_document(document, chunks)
 
-    # @pytest.mark.asyncio
-    # async def test_delete_collection_success(self, mock_repository):
-    #     mock_repository.client.collection.delete = AsyncMock()
-    #     await mock_repository.delete_collection("test_collection")
-    #     mock_repository.client.collection.delete.assert_called_once_with("test_collection")
+        # Pesquisa o documento usando uma palavra-chave
+        results = await repository.search_documents_by_keyword(search_keyword="keyword")
+      
+        # Verifica os resultados da pesquisa
+        assert len(results) == 1
+        assert results[0]["id"] == "chunk21"
+        assert "keyword" in results[0]["chunk_text"]
 
-    # @pytest.mark.asyncio
-    # async def test_delete_collection_failure(self, mock_repository):
-    #     mock_repository.client.collection.delete = AsyncMock(side_effect=Exception("Deletion failed"))
-    #     with pytest.raises(DropCollectionError, match="Failed to delete collection 'test_collection'"):
-    #         await mock_repository.delete_collection("test_collection")
+    @pytest.mark.asyncio(loop_scope="module")
+    async def test_search_document_by_similarity(self, repository):
+        # Criação de um documento e seus chunks com embeddings
+        document = Document(
+            doc_id="doc13",
+            doc_name="Test Document",
+            pages=["Page 1", "Page 2"],
+            embedding_model_name="test_model",
+        )
+        chunks = [
+            DocumentChunk(
+                chunk_id="chunk121",
+                chunk_text="This is a test chunk.",
+                page_number=1,
+                begin_offset=0,
+                end_offset=20,
+                embedding=[0.7] * 1536,  # Embedding para similaridade
+                doc_id="doc13",
+            ),
+            DocumentChunk(
+                chunk_id="chunk221",
+                chunk_text="Another test chunk.",
+                page_number=2,
+                begin_offset=0,
+                end_offset=25,
+                embedding=[0.4] * 1536,  # Embedding para similaridade
+                doc_id="doc13",
+            ),
+        ]
 
-    # @pytest.mark.asyncio
-    # async def test_list_collections_success(self, mock_repository):
-    #     mock_repository.client.collection.list = AsyncMock(return_value=["collection1", "collection2"])
-    #     collections = await mock_repository.list_collections()
-    #     assert collections == ["collection1", "collection2"]
-    #     mock_repository.client.collection.list.assert_called_once()
+        # Insere o documento e seus chunks
+        await repository.insert_document(document, chunks)
+        
+        # Consulta de similaridade com um embedding de consulta
+        query_embedding = [0.7] * 1536
+        results = await repository.search_documents_by_similarity(embedded_query=query_embedding, limit=2)
 
-    # @pytest.mark.asyncio
-    # async def test_list_collections_failure(self, mock_repository):
-    #     mock_repository.client.collection.list = AsyncMock(side_effect=Exception("Listing failed"))
-    #     with pytest.raises(GetCollectionError, match="Failed to list collections"):
-    #         await mock_repository.list_collections()
-
-    # @pytest.mark.asyncio
-    # async def test_insert_object_success(self, mock_repository):
-    #     mock_repository.client.data_object.create = AsyncMock()
-    #     await mock_repository.insert_object("test_collection", {"field": "value"})
-    #     mock_repository.client.data_object.create.assert_called_once_with(
-    #         {
-    #             "class": "test_collection",
-#             "properties": {"field": "value"},
-#         }
-#     )
-
-    # @pytest.mark.asyncio
-    # async def test_insert_object_failure(self, mock_repository):
-    #     mock_repository.client.data_object.create = AsyncMock(side_effect=Exception("Insertion failed"))
-    #     with pytest.raises(InsertObjectError, match="Failed to insert object into collection 'test_collection'"):
-    #         await mock_repository.insert_object("test_collection", {"field": "value"})
-
-    # @pytest.mark.asyncio
-    # async def test_search_by_keyword_success(self, mock_repository):
-    #     mock_repository.client.query.get.return_value = MagicMock(
-    #         with_bm25=MagicMock(
-    #             return_value=MagicMock(
-    #                 with_limit=MagicMock(
-    #                     return_value=MagicMock(do=MagicMock(return_value={"data": {"Get": {"test_collection": [{"doc_id": "doc1", "doc_name": "Test Document", "pages": ["Page 1 text"]}]}}}))
-    #                 )
-    #             )
-    #         )
-    #     )
-
-    #     results = await mock_repository.search_by_keyword("test_collection", "test", 1)
-    #     assert len(results) == 1
-    #     assert results[0].doc_id == "doc1"
-    #     assert results[0].doc_name == "Test Document"
-
-    # @pytest.mark.asyncio
-    # async def test_search_by_keyword_failure(self, mock_repository):
-    #     mock_repository.client.query.get = MagicMock(side_effect=Exception("Failed to search by keyword"))
-    #     with pytest.raises(SearchByKeywordError, match="Failed to search by keyword"):
-    #         await mock_repository.search_by_keyword("test_collection", "test", 1)
-
-    # @pytest.mark.asyncio
-    # async def test_search_by_vector_similarity_success(self, mock_repository):
-    #     mock_repository.client.query.get = MagicMock(
-    #         return_value=MagicMock(
-    #             with_near_vector=MagicMock(
-    #                 return_value=MagicMock(
-    #                     with_limit=MagicMock(
-    #                         return_value=MagicMock(do=MagicMock(return_value={"data": {"Get": {"test_collection": [{"doc_id": "doc1", "doc_name": "Test Document", "pages": ["Page 1 text"]}]}}}))
-    #                     )
-    #                 )
-    #             )
-    #         )
-    #     )
-    #     results = await mock_repository.search_by_vector_similarity("test_collection", [0.1, 0.2, 0.3], 1)
-    #     assert len(results) == 1
-    #     assert results[0].doc_id == "doc1"
-    #     assert results[0].doc_name == "Test Document"
-
-    # @pytest.mark.asyncio
-    # async def test_search_by_vector_similarity_failure(self, mock_repository):
-    #     mock_repository.client.query.get = MagicMock(side_effect=Exception("Failed to search by vector similarity"))
-    #     with pytest.raises(SearchByVectorError, match="Failed to search by vector similarity"):
-    #         await mock_repository.search_by_vector_similarity("test_collection", [0.1, 0.2, 0.3], 1)
+        # Verifica os resultados da busca por similaridade
+        assert len(results) == 2
+        assert results[0]["id"] == "chunk121"  # Chunk mais similar deve ser o primeiro
+       
 
 
-# class TestEmbeddingPipelineService:
-#     @pytest.mark.asyncio
-#     async def test_load_documents_from_folder_success(self, tmp_path):
-#         folder = tmp_path / "documents"
-#         folder.mkdir()
-#         valid_file = folder / "doc1.json"
-#         valid_file.write_text('{"doc_id": "doc1", "doc_name": "Test Doc", "pages": ["Page 1", "Page 2"]}')
+class TestEmbeddingPipelineService:
 
-#         documents = await EmbeddingPipelineService._load_documents_from_folder(str(folder))
-#         assert len(documents) == 1
-#         assert documents[0].doc_id == "doc1"
-#         assert documents[0].doc_name == "Test Doc"
-#         assert documents[0].pages == ["Page 1", "Page 2"]
+    @pytest_asyncio.fixture(loop_scope="module")
+    async def mock_embedding_model(self):
+        """
+        Mock do modelo de embedding para gerar embeddings fictícios.
+        """
+        mock_model = AsyncMock(spec=EmbeddingModel)
+        mock_model.generate_texts_embeddings = AsyncMock(
+            return_value=[[0.9] * 1536 for _ in range(10)]  # Mock de embeddings
+        )
+        return mock_model
 
-#     @pytest.mark.asyncio
-#     async def test_load_documents_from_folder_invalid_format(self, tmp_path):
-#         folder = tmp_path / "documents"
-#         folder.mkdir()
-#         invalid_file = folder / "doc1.txt"
-#         invalid_file.write_text("Invalid content")
+    @pytest_asyncio.fixture(loop_scope="module") 
+    async def repository(self):  
+        repo = await DocumentRepository.create()
+        yield repo
+        await repo.clean_database()
+        await repo.close_connection_pool()
 
-#         with pytest.raises(FileInvalidFormatException, match="File 'doc1.txt' is not a JSON file."):
-#             await EmbeddingPipelineService._load_documents_from_folder(str(folder))
+    @pytest.mark.asyncio(loop_scope="module")
+    async def test_apply(self, tmp_path, mock_embedding_model, repository):
+        """
+        Testa o método apply do EmbeddingPipelineService.
+        """
+        # Cria um documento de teste no diretório temporário
+        document_data = {
+            "doc_id": "doc1",
+            "doc_name": "Test Document",
+            "pages": ["Page 1 content", "Page 2 content"],
+        }
+        document_path = tmp_path / "doc1.json"
+        document_path.write_text(json.dumps(document_data))
 
-#     @pytest.mark.asyncio
-#     async def test_load_documents_from_folder_invalid_content(self, tmp_path):
-#         folder = tmp_path / "documents"
-#         folder.mkdir()
-#         invalid_file = folder / "doc1.json"
-#         invalid_file.write_text('{"invalid_key": "value"}')
+        # Executa o pipeline
+        documents_folder = str(tmp_path)
+        processed_documents = await EmbeddingPipelineService.apply(
+            documents_folder=documents_folder,
+            embedding_model=mock_embedding_model,
+            chunk_size=10,
+            overlap=5,
+        )
 
-#         with pytest.raises(InvalidDocumentException, match="Invalid document content in 'doc1.json'"):
-#             await EmbeddingPipelineService._load_documents_from_folder(str(folder))
+        # Verifica se o documento foi processado corretamente
+        assert len(processed_documents) == 1
+        assert processed_documents[0].doc_id == "doc1"
+        assert processed_documents[0].doc_name == "Test Document"
+        
+        # get document
+        doc = await repository.get_document_metadata(processed_documents[0].doc_id)
+        assert doc is not None
+        assert doc["id"] == "doc1"
 
-#     def test_chunk_text_success(self):
-#         page = "This is a test page."
-#         chunks = []
 
-#         chunks.extend(
-#             EmbeddingPipelineService._chunk_text(
-#                 doc_id="doc1",
-#                 page_number=1,
-#                 page=page,
-#                 chunk_size=10,
-#                 overlap=5,
-#             )
-#         )
-
-#         assert len(chunks) == 4
-#         assert chunks[0].chunk_text == "This is a "
-#         assert chunks[1].chunk_text == "is a test "
-#         assert chunks[2].chunk_text == "test page."
-
-#     def test_chunk_text_invalid_chunk_size(self):
-#         with pytest.raises(ValueError, match="Chunk size must be greater than overlap."):
-#             EmbeddingPipelineService._chunk_text(
-#                 doc_id="doc1",
-#                 page_number=1,
-#                 page="This is a test page.",
-#                 chunk_size=5,
-#                 overlap=10,
-#             )
-
-#     @pytest.mark.asyncio
-#     async def test_embed_chunks_success(self):
-#         chunks = [
-#             DocumentChunk(
-#                 doc_id="doc1",
-#                 chunk_id="chunk1",
-#                 chunk_text="This is a test chunk.",
-#                 page_number=1,
-#                 begin_offset=0,
-#                 end_offset=20,
-#             )
-#         ]
-#         mock_embedding_model = MagicMock(spec=EmbeddingModel)
-#         mock_embedding_model.generate_texts_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
-
-#         await EmbeddingPipelineService._embed_chunks(chunks, mock_embedding_model)
-#         assert chunks[0].embedding == [0.1, 0.2, 0.3]
-
-#     @pytest.mark.asyncio
-#     async def test_process_document_success(self):
-#         document = Document(
-#             doc_id="doc1",
-#             doc_name="Test Document",
-#             pages=["This is page 1.", "This is page 2."],
-#         )
-#         mock_embedding_model = MagicMock(spec=EmbeddingModel)
-#         mock_embedding_model.generate_texts_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
-
-#         chunks = await EmbeddingPipelineService._process_document(document, mock_embedding_model, chunk_size=10, overlap=5)
-
-#         assert len(chunks) == 6
-#         assert chunks[0].chunk_text == "This is pa"
-#         assert chunks[0].embedding == [0.1, 0.2, 0.3]
-
-#     @pytest.mark.asyncio
-#     async def test_apply_success(self, tmp_path):
-#         folder = tmp_path / "documents"
-#         folder.mkdir()
-#         valid_file = folder / "doc1.json"
-#         valid_file.write_text('{"doc_id": "doc1", "doc_name": "Test Doc", "pages": ["Page 1", "Page 2"]}')
-
-#         mock_embedding_model = MagicMock(spec=EmbeddingModel)
-#         mock_embedding_model.generate_texts_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
-
-#         mock_repository = MagicMock(spec=CollectionRepository)
-#         mock_repository.insert_document_chunks = AsyncMock()
-
-#         documents = await EmbeddingPipelineService.apply(documents_folder=str(folder), document_repository_name="test_repository", embedding_model=mock_embedding_model, chunk_size=10, overlap=5)
-#         assert len(documents) == 2
-#         assert documents[0].doc_id == "doc1"
+        # search document by similarity
+        query_embedding = [0.9] * 1536
+        results = await repository.search_documents_by_similarity(embedded_query=query_embedding, limit=2)
+        assert len(results) >= 1
+        assert results[0]["fk_doc_id"] == "doc1"  # Chunk mais similar deve ser o primeiro
+        
+        

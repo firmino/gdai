@@ -6,7 +6,7 @@ import os
 import json
 from src.embedding_pipeline.schema import Document, DocumentChunk, DocumentInput
 from src.embedding_pipeline.embedding import EmbeddingModel
-from src.embedding_pipeline.repository import  CollectionRepository, DOCUMENT_PROPERTIES, CHUNK_PROPERTIES
+from src.embedding_pipeline.repository import  DocumentRepository
 from src.embedding_pipeline.exceptions import (
     FolderNotFoundException,
     FileInvalidFormatException,
@@ -119,30 +119,29 @@ class EmbeddingPipelineService:
     async def apply(
         documents_folder: str,
         embedding_model: EmbeddingModel,
-        document_repository_name: str, 
         chunk_size: int = 1000,
         overlap: int = 50,
     ) -> list[Document]:
         """
         Apply the embedding pipeline to a list of documents.
         """
-        chunk_repository_name = f"{document_repository_name}_chunks"
         input_documents = await EmbeddingPipelineService._load_documents_from_folder(documents_folder)
-        repository = CollectionRepository()
-        await repository.initialize_client()
-
-        # Create document and chunk collections
-        await repository.create_collection(document_repository_name, [prop.dict() for prop in DOCUMENT_PROPERTIES])
-        await repository.create_collection(chunk_repository_name, [prop.dict() for prop in CHUNK_PROPERTIES])
+        repository = await DocumentRepository.create()
 
         for document in input_documents:
             # Process document to generate chunks
             document_chunks = await EmbeddingPipelineService._process_document(
                 document, embedding_model, chunk_size, overlap
             )
+            document_metadata = Document(
+                doc_id=document.doc_id,
+                doc_name=document.doc_name,
+                pages=document.pages,
+                embedding_model_name=str(embedding_model),
+            )
+            await repository.insert_document(document_metadata, document_chunks)  
+       
 
-            # Insert document and chunks into respective collections
-            await repository.insert_data(document_repository_name, document.dict())
-            await repository.insert_data(chunk_repository_name, [chunk.dict() for chunk in document_chunks])
+
 
         return input_documents

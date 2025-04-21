@@ -1,19 +1,19 @@
 
 services:
-  weaviate:
-    image: semitechnologies/weaviate:latest
+  
+  pgvector:
+    image: ankane/pgvector:latest
+    hostname: pgvector
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "5555:5432"
     environment:
-      QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
-      ENABLE_MODULES: ''
-      CLUSTER_HOSTNAME: 'node1'
+      - POSTGRES_DB=vectordb
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpwd
     volumes:
-      - weaviate_data:/var/lib/weaviate
+      - ./infra/pgvector/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgvector_data:/var/lib/postgresql/data
     networks:
       - app_network
 
@@ -56,7 +56,7 @@ services:
       WEAVIATE_URL: "http://weaviate:8080"
       SUPERTOKENS_URL: "http://supertokens:3567"
     depends_on:
-      - weaviate
+      - pgvector
       - supertokens
     networks:
       - app_network
@@ -81,8 +81,8 @@ services:
       - app_network
     
 volumes:
-  weaviate_data:
   postgres_data:
+  pgvector_data:
 
 networks:
   app_network:

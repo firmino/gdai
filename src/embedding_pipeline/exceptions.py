@@ -1,28 +1,3 @@
-class InvalidDocumentInput(Exception):
-    """
-    Exception raised when the input document is invalid.
-    """
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class InvalidAPIKeyException(Exception):
     """
     Exception raised when an invalid API key is provided.
