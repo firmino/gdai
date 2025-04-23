@@ -1,0 +1,5 @@
+{
+    "doc_id": "doc1",
+    "doc_name": "valid_json_content.doc",
+    "pages": ["Page 1", "Page 2"]
+}

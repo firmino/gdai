@@ -12,6 +12,7 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "pgvector>=0.4.0",
     "python-dotenv>=1.1.0",
+    "rich>=13.9.4",
     "scipy>=1.15.2",
     "streamlit>=1.44.0",
     "taskipy>=1.14.1",

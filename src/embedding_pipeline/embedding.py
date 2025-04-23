@@ -1,6 +1,4 @@
 """
-embedding.py
-
 This module provides classes and methods for generating text embeddings using
 various embedding models. It includes a base class for embedding models and
 a specific implementation for the Cohere embedding model.
@@ -22,8 +20,8 @@ Usage:
 Example:
     >>> from embedding import CohereEmbeddingModel
     >>> model = CohereEmbeddingModel()
-    >>> embedding = await model.embed_text("Sample text")
-    >>> embeddings = await model.embed_texts(["Text 1", "Text 2"])
+    >>> embedding = await model.generate_text_embedding("Sample text")
+    >>> embeddings = await model.generate_texts_embeddings(["Text 1", "Text 2"])
     >>> print(model)
     cohere/embed-english-v3.0
 """
@@ -45,7 +43,7 @@ class EmbeddingModel(ABC):
         model_name (str): The name of the embedding model.
     """
 
-    def __init__(self, model_name):
+    def __init__(self, model_name: str):
         """
         Initialize the embedding model.
 
@@ -80,7 +78,7 @@ class EmbeddingModel(ABC):
         """
         pass
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return a string representation of the embedding model.
 
@@ -90,24 +88,38 @@ class EmbeddingModel(ABC):
         return self.model_name
 
 
-
 class CohereEmbeddingModel(EmbeddingModel):
     """
     A specific implementation of the EmbeddingModel that uses the Cohere API.
+
+    Attributes:
+        model (str): The name of the Cohere embedding model.
+        api_key (str): The API key for the Cohere service.
+        cohere (cohere.Client): The Cohere client instance.
+        SEARCH_DOCUMENT_TYPE (str): The input type for the embedding model.
     """
+
     def __init__(self, api_key: str = None):
         """
         Initialize the Cohere embedding model.
 
         Args:
-            api_key (str): The API key for the Cohere service.
+            api_key (str): The API key for the Cohere service. If not provided,
+                           it will be loaded from the environment.
         """
-        self.model = "embed-english-v3.0"
+        self.model = "embed-v4.0"
         model_name = f"cohere/{self.model}"
         super().__init__(model_name)
         self.api_key = api_key or CohereEmbeddingModel.get_api_key()
-        self.cohere = cohere.Client(api_key=self.api_key)
+        self.cohere = None
         self.SEARCH_DOCUMENT_TYPE = "search_document"
+
+
+    @staticmethod
+    async def create():
+        embedding_model = CohereEmbeddingModel()
+        embedding_model.cohere = cohere.AsyncClient(api_key=embedding_model.api_key)
+        return embedding_model
 
     @staticmethod
     def get_api_key() -> str:
@@ -138,16 +150,15 @@ class CohereEmbeddingModel(EmbeddingModel):
         Raises:
             Exception: If the API call fails.
         """
-
-        #TODO: add async call to cohere
         try:
-            res = self.cohere.embed( 
+            res = await self.cohere.embed(
                 texts=[text],
                 model=self.model,
                 input_type=self.SEARCH_DOCUMENT_TYPE,
                 embedding_types=["float"],
+                output_dimension=1536,
             )
-            return res.embeddings.float_[0]
+            return await res.embeddings.float_[0]
         except Exception as e:
             raise Exception(f"Failed to generate embedding for text '{text}': {e}")
 
@@ -165,11 +176,13 @@ class CohereEmbeddingModel(EmbeddingModel):
             Exception: If the API call fails.
         """
         try:
-            res = self.cohere.embed(
+            
+            res = await self.cohere.embed(
                 texts=texts,
                 model=self.model,
                 input_type=self.SEARCH_DOCUMENT_TYPE,
                 embedding_types=["float"],
+                
             )
             return res.embeddings.float_
         except Exception as e:

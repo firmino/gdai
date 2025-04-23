@@ -9,14 +9,8 @@ from unittest.mock import AsyncMock, patch
 from src.embedding_pipeline.embedding import EmbeddingModel
 from src.embedding_pipeline.schema import Document, DocumentChunk, DocumentInput
 from src.embedding_pipeline.repository import DocumentRepository
-
 from src.embedding_pipeline.service import EmbeddingPipelineService
-# from src.embedding_pipeline.embedding import EmbeddingModel
-from src.embedding_pipeline.exceptions import (
-    # FolderNotFoundException,
-    FileInvalidFormatException,
-    InvalidDocumentException,
-)
+
 
 
 class TestSchemaDocumentInput:
