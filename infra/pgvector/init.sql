@@ -5,6 +5,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE documents (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    tenant_id TEXT NOT NULL, 
     pages TEXT[] NOT NULL,  -- Array de strings para as páginas
     embedding_model_name TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -13,6 +14,7 @@ CREATE TABLE documents (
 -- Tabela de chunks dos documentos com vetores
 CREATE TABLE document_chunks (
     id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL, 
     chunk_text TEXT NOT NULL CHECK (chunk_text <> ''),  -- Equivalente ao min_length=1
     page_number INTEGER NOT NULL CHECK (page_number >= 0),
     begin_offset INTEGER NOT NULL CHECK (begin_offset >= 0),

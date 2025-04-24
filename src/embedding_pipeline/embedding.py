@@ -53,19 +53,6 @@ class EmbeddingModel(ABC):
         self.model_name = model_name
 
     @abstractmethod
-    async def generate_text_embedding(self, text: str) -> list[float]:
-        """
-        Generate an embedding for a single text.
-
-        Args:
-            text (str): The input text.
-
-        Returns:
-            list[float]: The embedding vector for the input text.
-        """
-        pass
-
-    @abstractmethod
     async def generate_texts_embeddings(self, texts: list[str]) -> list[list[float]]:
         """
         Generate embeddings for multiple texts.
@@ -99,7 +86,7 @@ class CohereEmbeddingModel(EmbeddingModel):
         SEARCH_DOCUMENT_TYPE (str): The input type for the embedding model.
     """
 
-    def __init__(self, api_key: str = None):
+    def __init__(self):
         """
         Initialize the Cohere embedding model.
 
@@ -110,13 +97,12 @@ class CohereEmbeddingModel(EmbeddingModel):
         self.model = "embed-v4.0"
         model_name = f"cohere/{self.model}"
         super().__init__(model_name)
-        self.api_key = api_key or CohereEmbeddingModel.get_api_key()
+        self.api_key = CohereEmbeddingModel.get_api_key()   
         self.cohere = None
-        self.SEARCH_DOCUMENT_TYPE = "search_document"
-
+        self.SEARCH_DOCUMENT_TYPE = "search_query"
 
     @staticmethod
-    async def create():
+    async def create() -> "CohereEmbeddingModel":
         embedding_model = CohereEmbeddingModel()
         embedding_model.cohere = cohere.AsyncClient(api_key=embedding_model.api_key)
         return embedding_model
@@ -132,42 +118,18 @@ class CohereEmbeddingModel(EmbeddingModel):
         Raises:
             InvalidAPIKeyException: If the API key is not found.
         """
-        api_key = os.getenv("COHERE_API_KEY")
+        api_key = os.getenv("COHERE_API_KEY", None)
         if not api_key:
             raise InvalidAPIKeyException("Cohere API key is required.")
         return api_key
 
-    async def generate_text_embedding(self, text: str) -> list[float]:
-        """
-        Generate an embedding for a single text using the Cohere API.
-
-        Args:
-            text (str): The input text.
-
-        Returns:
-            list[float]: The embedding vector for the input text.
-
-        Raises:
-            Exception: If the API call fails.
-        """
-        try:
-            res = await self.cohere.embed(
-                texts=[text],
-                model=self.model,
-                input_type=self.SEARCH_DOCUMENT_TYPE,
-                embedding_types=["float"],
-                output_dimension=1536,
-            )
-            return await res.embeddings.float_[0]
-        except Exception as e:
-            raise Exception(f"Failed to generate embedding for text '{text}': {e}")
-
+    
     async def generate_texts_embeddings(self, texts: list[str]) -> list[list[float]]:
         """
         Generate embeddings for multiple texts using the Cohere API.
 
         Args:
-            texts (list[str]): A list of input texts.
+            texts (list[str]): A list of input texts. The maximum number of texts is 96
 
         Returns:
             list[list[float]]: A list of embedding vectors for the input texts.
@@ -175,14 +137,16 @@ class CohereEmbeddingModel(EmbeddingModel):
         Raises:
             Exception: If the API call fails.
         """
-        try:
-            
+        if len(texts) > 96:
+            raise ValueError("The maximum number of texts is 1000.")
+
+        try:    
+
             res = await self.cohere.embed(
                 texts=texts,
                 model=self.model,
                 input_type=self.SEARCH_DOCUMENT_TYPE,
                 embedding_types=["float"],
-                
             )
             return res.embeddings.float_
         except Exception as e:

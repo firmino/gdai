@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "asyncpg>=0.30.0",
     "click>=8.1.8",
-    "cohere>=5.14.2",
+    "cohere>=5.15.0",
     "fastapi-cli>=0.0.7",
     "fastapi[standard]>=0.115.12",
     "pgvector>=0.4.0",

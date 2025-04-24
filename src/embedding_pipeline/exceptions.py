@@ -16,21 +16,9 @@ class FileInvalidFormatException(Exception):
     """
 
 
-class InvalidDocumentException(Exception):
+class InvalidDocumentContentException(Exception):
     """
     Exception raised when a document is invalid.
-    """
-
-
-class SearchByKeywordError(Exception):
-    """
-    Exception raised when a keyword search fails.
-    """
-
-
-class SearchByVectorError(Exception):
-    """
-    Exception raised when a vector similarity search fails.
     """
 
 
