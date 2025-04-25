@@ -39,7 +39,7 @@ class EmbeddingPipelineService:
     """
 
     @staticmethod
-    def _chunk_text(doc_id: str, page_number: int, page: str, chunk_size: int, overlap: int) -> list[DocumentChunk]:
+    def _chunk_text(doc_id: str, tenant_id:str, page_number: int, page: str, chunk_size: int, overlap: int) -> list[DocumentChunk]:
         """
         Split a page of text into smaller chunks with a specified overlap.
 
@@ -66,6 +66,7 @@ class EmbeddingPipelineService:
             chunk_id = f"{doc_id}-{page_number}-{i}"
             chunk = DocumentChunk(
                 doc_id=doc_id,
+                tenant_id=tenant_id,   
                 chunk_id=chunk_id,
                 chunk_text=chunk_text,
                 page_number=page_number,
@@ -96,7 +97,7 @@ class EmbeddingPipelineService:
                 chunk.embedding = embedding
 
     @staticmethod
-    async def _process_document(
+    async def process_document(
         document: Document,
         embedding_model: EmbeddingModel,
         chunk_size: int = 1000,
@@ -118,6 +119,7 @@ class EmbeddingPipelineService:
         for page_number, page in enumerate(document.pages or []):
             page_chunks = EmbeddingPipelineService._chunk_text(
                 doc_id=document.doc_id,
+                tenant_id=document.tenant_id,
                 page_number=page_number,
                 page=page,
                 chunk_size=chunk_size,
@@ -129,7 +131,7 @@ class EmbeddingPipelineService:
         return document_chunks
 
     @staticmethod
-    async def load_documents_from_folder(folder_path: str) -> list[DocumentInput]:
+    async def load_documents_from_folder(folder_path: str) -> (list[DocumentInput], list[str], list[str]):
         """
         Load documents from a folder and validate their content.
 
@@ -162,6 +164,7 @@ class EmbeddingPipelineService:
                     document_data = json.load(file)
                     document = DocumentInput(
                         doc_id=document_data["doc_id"],
+                        tenant_id=document_data.get("tenant_id"),   
                         doc_name=document_data["doc_name"],
                         pages=document_data["pages"],
                     )
@@ -188,7 +191,7 @@ class EmbeddingPipelineService:
             list[DocumentChunk]: A list of processed DocumentChunk objects.
         """
 
-        document_chunks = await EmbeddingPipelineService._process_document(document, embedding_model, chunk_size, overlap)
+        document_chunks = await EmbeddingPipelineService.process_document(document, embedding_model, chunk_size, overlap)
 
         document_metadata = Document(
             doc_id=document.doc_id,

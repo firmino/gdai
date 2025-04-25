@@ -19,10 +19,6 @@ class DocumentRepository:
     Methods:
         create() -> DocumentRepository:
             Initializes the PostgreSQL connection and returns a repository instance.
-
-        close_connection_pool() -> None:
-            Closes the PostgreSQL connection pool.
-
         insert_document(document: Document, document_chunks: List[DocumentChunk]) -> None:
             Inserts a document and its associated chunks into the database.
 
@@ -41,6 +37,7 @@ class DocumentRepository:
         search_documents_by_similarity(embedded_query: List[float], limit: int) -> List[dict]:
             Searches for document chunks based on vector similarity.
     """
+    
 
     def __init__(self):
         """
@@ -57,29 +54,11 @@ class DocumentRepository:
             DocumentRepository: An instance of the repository with an active connection pool.
         """
         repository = DocumentRepository()
-        repository.connection_pool = await repository._get_connection_pool()
+        repository.connection_pool = await PGVectorDatabase.get_connection_pool()
         return repository
 
-    async def _get_connection_pool(self):
-        """
-        Loads the PostgreSQL connection pool.
 
-        Returns:
-            None
-        """
-        connection_pool = await PGVectorDatabase.get_connection_pool()
-        return connection_pool
-
-    async def close_connection_pool(self):
-        """
-        Closes the PostgreSQL connection pool.
-
-        Returns:
-            None
-        """
-        if self.connection_pool:
-            await self.connection_pool.close()
-
+    
     async def get_document_by_id(self, document_id: str) -> Document:
         """
         Retrieves a document by its ID.
@@ -202,7 +181,7 @@ class DocumentRepository:
         except Exception as e:
             print(f"Error deleting document: {e}")
 
-    async def clean_tenant_database(self, tentant_id: str):
+    async def clean_tenant_database(self, tenant_id: str):
         """
         Clears the entire database by deleting all data from tables.
 
@@ -211,6 +190,6 @@ class DocumentRepository:
         """
         connection = await self.connection_pool.acquire()
         async with connection.transaction():
-            await connection.execute("DELETE FROM document_chunks where tenant_id = $1", tentant_id)
-            await connection.execute("DELETE FROM documents where tenant_id = $1", tentant_id)  
+            await connection.execute("DELETE FROM document_chunks where tenant_id = $1", tenant_id)
+            await connection.execute("DELETE FROM documents where tenant_id = $1", tenant_id)  
         await self.connection_pool.release(connection)

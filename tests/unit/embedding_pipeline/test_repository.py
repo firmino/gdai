@@ -5,20 +5,20 @@ from src.embedding_pipeline.repository import DocumentRepository
 
 
 class TestDocumentRepository:
-    TENTANT_ID_TEST = "ABC123"
+    TENANT_ID_TEST = "ABC123"
 
-    @pytest_asyncio.fixture(scope="module")
+    @pytest_asyncio.fixture(scope="module", loop_scope="module")
     async def repository(self):
         repo = await DocumentRepository.create()
         yield repo
-        await repo.clean_tenant_database(tentant_id=self.TENTANT_ID_TEST)
-        await repo.close_connection_pool()
+        await repo.clean_tenant_database(tenant_id=TestDocumentRepository.TENANT_ID_TEST)
+       
 
     @pytest_asyncio.fixture(scope="module")
     async def document(self):
         document = Document(
             doc_id="doc1",
-            tenant_id=self.TENTANT_ID_TEST,
+            tenant_id=self.TENANT_ID_TEST,
             doc_name="Test Document",
             pages=["Page 1", "Page 2"],
             embedding_model_name="test_model",
@@ -30,7 +30,7 @@ class TestDocumentRepository:
         chunks = [
             DocumentChunk(
                 chunk_id="chunk1",
-                tenant_id=self.TENTANT_ID_TEST,
+                tenant_id=self.TENANT_ID_TEST,
                 chunk_text="This is a test chunk.",
                 page_number=1,
                 begin_offset=0,
@@ -40,7 +40,7 @@ class TestDocumentRepository:
             ),
             DocumentChunk(
                 chunk_id="chunk2",
-                tenant_id=self.TENTANT_ID_TEST,
+                tenant_id=self.TENANT_ID_TEST,
                 chunk_text="Another test chunk.",
                 page_number=2,
                 begin_offset=0,
@@ -80,6 +80,8 @@ class TestDocumentRepository:
         assert chunk2.end_offset == chunks[1].end_offset
         assert len(chunk2.embedding) == len(chunks[1].embedding)
         assert chunk2.doc_id == chunks[1].doc_id
+
+        await repository.delete_document(document.doc_id)
 
     @pytest.mark.asyncio(loop_scope="module")
     async def test_get_document_by_id_not_found(self, repository):
@@ -135,6 +137,9 @@ class TestDocumentRepository:
 
         chunk2 = await repository.get_document_chunk_by_id(original_chunk_ids[1])
         assert chunk2 is not None
+
+        # Cleans the database for the original tenant
+        await repository.clean_tenant_database("another_tenant")
 
     @pytest.mark.asyncio(loop_scope="module")
     async def test_clean_tenant_database_not_found(self, repository, document, chunks):
