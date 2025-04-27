@@ -50,7 +50,7 @@ async def _insert_document(documents: list[Document], chunk_size: int = 1000, ch
     Load a document and process it by splitting its pages into text chunks and embedding them.
     """
     embedding_model = await CohereEmbeddingModel.create()
-    repository = await DocumentRepository.create()
+    repository =  DocumentRepository()
     document_insert_error = []
     for document in documents:
         try:
@@ -121,8 +121,7 @@ def remove_documents_from_db(folder:str, verbose: bool = False):
     tot_invalid_doc_contents = len(invalid_doc_content)
     tot_non_json_files = len(non_json_files)
 
-
-    repository = loop.run_until_complete(DocumentRepository.create())
+    repository = DocumentRepository()
     non_deleted_documents = loop.run_until_complete(EmbeddingPipelineService.delete_documents(valid_docs, repository))
 
     tot_non_deleted_documents = len(non_deleted_documents) 
