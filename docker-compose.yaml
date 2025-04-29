@@ -17,16 +17,22 @@ services:
     networks:
       - app_network
 
-  redis:
-    image: redis:latest
-    hostname: redis
-    restart: unless-stopped
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit1"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
     ports:
-      - "6379:6379"
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq1"
     volumes:
-      - redis_data:/data
-    networks:
-      - app_network
+    - rabbitmq_data:/var/lib/rabbitmq 
 
 
   fastapi-app:
@@ -41,7 +47,7 @@ services:
       SUPERTOKENS_URL: "http://supertokens:3567"
     depends_on:
       - pgvector
-      - redis
+      - rabbitmq
     networks:
       - app_network
   
@@ -66,7 +72,7 @@ services:
     
 volumes:
   pgvector_data:
-  redis_data:
+  rabbitmq_data:
 
 networks:
   app_network:
