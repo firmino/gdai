@@ -8,6 +8,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "click>=8.1.8",
     "cohere>=5.15.0",
+    "dramatiq[rabbitmq,watch]>=1.17.1",
     "fastapi-cli>=0.0.7",
     "fastapi[standard]>=0.115.12",
     "pgvector>=0.4.0",
@@ -16,7 +17,6 @@ dependencies = [
     "scipy>=1.15.2",
     "streamlit>=1.44.0",
     "taskipy>=1.14.1",
-    "weaviate-client>=4.11.3",
 ]
 
 [tool.ruff]

@@ -17,33 +17,17 @@ services:
     networks:
       - app_network
 
-  supertokens:
-    image: supertokens/supertokens-postgresql:latest
+  redis:
+    image: redis:latest
+    hostname: redis
     restart: unless-stopped
     ports:
-      - "3567:3567"
-    environment:
-      POSTGRESQL_USER: supertokens
-      POSTGRESQL_PASSWORD: your_supertokens_password
-      POSTGRESQL_DATABASE: supertokens
-      POSTGRESQL_HOST: postgres
-      POSTGRESQL_PORT: 5432
-    depends_on:
-      - postgres
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - app_network
 
-  postgres:
-    image: postgres:13-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: supertokens
-      POSTGRES_PASSWORD: your_supertokens_password
-      POSTGRES_DB: supertokens
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app_network
 
   fastapi-app:
     container_name: fastapi-app
@@ -57,7 +41,7 @@ services:
       SUPERTOKENS_URL: "http://supertokens:3567"
     depends_on:
       - pgvector
-      - supertokens
+      - redis
     networks:
       - app_network
   
@@ -81,8 +65,8 @@ services:
       - app_network
     
 volumes:
-  postgres_data:
   pgvector_data:
+  redis_data:
 
 networks:
   app_network:
