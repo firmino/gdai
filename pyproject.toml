@@ -8,6 +8,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "click>=8.1.8",
     "cohere>=5.15.0",
+    "docling>=2.31.0",
     "dramatiq[rabbitmq,watch]>=1.17.1",
     "fastapi-cli>=0.0.7",
     "fastapi[standard]>=0.115.12",

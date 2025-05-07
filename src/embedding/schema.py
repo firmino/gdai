@@ -2,25 +2,15 @@
 This module defines the data models used in the embedding pipeline.
 
 Classes:
-    DocumentInput: Represents the input data for creating a document.
     Document: Represents a document with metadata and pages.
     DocumentChunk: Represents a chunk of text extracted from a document.
 
 Usage:
-    - Use `DocumentInput` to validate and parse input data for documents.
     - Use `Document` to represent a complete document with metadata and pages.
     - Use `DocumentChunk` to represent and validate individual text chunks.
 
 Example:
-    >>> document_input = DocumentInput(
-    ...     tenant_id="tenant1",
-    ...     doc_id="doc1",
-    ...     doc_name="Example Document",
-    ...     pages=["Page 1 text", "Page 2 text"]
-    ... )
-    >>> print(document_input)
-    DocumentInput(doc_id=doc1, doc_name=Example Document)
-
+   
     >>> document = Document(
     ...     tenant_id="tenant1",
     ...     doc_id="doc1",
@@ -48,15 +38,12 @@ from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from typing import Optional
 
 
-class DocumentInput(BaseModel):
+class Document(BaseModel):
     """
-    Represents the input data for creating a document.
+    Represents a document with metadata and pages.
 
     Attributes:
-        tenant_id (str): Identifier for the tenant.
-        doc_id (str): Unique identifier for the document.
-        doc_name (str): Name or title of the document.
-        pages (list[str]): List of text pages in the document.
+        embedding_model_name (str): Name of the embedding model used for the document.
     """
 
     tenant_id: str
@@ -81,102 +68,6 @@ class DocumentInput(BaseModel):
         """
         if len(value) < 3 or len(value) > 256:
             raise ValueError("tenant_id must be between 3 and 256 characters")
-        return value
-
-    @field_validator("doc_id")
-    def validate_doc_id(cls, value, info: ValidationInfo):
-        """
-        Validates the length of the document ID.
-
-        Args:
-            value (str): The document ID to validate.
-            info (ValidationInfo): Additional validation context.
-
-        Returns:
-            str: The validated document ID.
-
-        Raises:
-            ValueError: If the document ID is not between 1 and 128 characters.
-        """
-        if len(value) < 1 or len(value) > 128:
-            raise ValueError("doc_id must be between 1 and 128 characters")
-        return value
-
-    @field_validator("doc_name")
-    def validate_doc_name(cls, value, info: ValidationInfo):
-        """
-        Validates the length of the document name.
-
-        Args:
-            value (str): The document name to validate.
-            info (ValidationInfo): Additional validation context.
-
-        Returns:
-            str: The validated document name.
-
-        Raises:
-            ValueError: If the document name is not between 1 and 256 characters.
-        """
-        if len(value) < 1 or len(value) > 256:
-            raise ValueError("doc_name must be between 1 and 256 characters")
-        return value
-
-    @field_validator("pages")
-    def validate_pages(cls, value, info: ValidationInfo):
-        """
-        Validates that the pages list is not empty.
-
-        Args:
-            value (list[str]): The list of pages to validate.
-            info (ValidationInfo): Additional validation context.
-
-        Returns:
-            list[str]: The validated list of pages.
-
-        Raises:
-            ValueError: If the pages list is empty.
-        """
-        if len(value) == 0:
-            raise ValueError("pages cannot be empty")
-        return value
-
-    def __str__(self) -> str:
-        """
-        Return a human-readable string representation of the DocumentInput.
-
-        Returns:
-            str: A string displaying the document ID and name.
-        """
-        return f"DocumentInput(doc_id={self.doc_id}, doc_name={self.doc_name})"
-
-
-class Document(DocumentInput):
-    """
-    Represents a document with metadata and pages.
-
-    Attributes:
-        embedding_model_name (str): Name of the embedding model used for the document.
-    """
-
-    embedding_model_name: str
-
-    @field_validator("embedding_model_name")
-    def validate_embedding_model_name(cls, value, info: ValidationInfo):
-        """
-        Validates the length of the embedding model name.
-
-        Args:
-            value (str): The embedding model name to validate.
-            info (ValidationInfo): Additional validation context.
-
-        Returns:
-            str: The validated embedding model name.
-
-        Raises:
-            ValueError: If the embedding model name is not between 1 and 128 characters.
-        """
-        if len(value) < 1 or len(value) > 128:
-            raise ValueError("embedding_model_name must be between 1 and 128 characters")
         return value
 
     def __str__(self) -> str:
@@ -204,8 +95,8 @@ class DocumentChunk(BaseModel):
         doc_id (str): The ID of the document the chunk belongs to.
     """
 
-    chunk_id: str
     tenant_id: str
+    chunk_id: str
     chunk_text: str = Field(min_length=1)
     page_number: int = Field(ge=0)  # Must be >= 0
     begin_offset: int = Field(ge=0)  # Must be >= 0

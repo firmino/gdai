@@ -2,7 +2,7 @@ import os
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock
-from src.embedding_pipeline.service import EmbeddingPipelineService
+from src.embedding_pipeline.service import EmbeddingActor
 from src.embedding_pipeline.schema import Document, DocumentInput
 from src.embedding_pipeline.embedding import EmbeddingModel
 from src.embedding_pipeline.repository import DocumentRepository
@@ -36,7 +36,7 @@ class TestEmbeddingPipelineService:
     @pytest.mark.asyncio
     async def test_load_document_folder(self, repository, mock_embedding_model):
         fixture_folder = os.path.join(os.path.dirname(__file__), "../../fixtures/embedding_pipeline")
-        valid_documents, invalid_documents_content, non_json_files = await EmbeddingPipelineService.load_documents_from_folder(fixture_folder)
+        valid_documents, invalid_documents_content, non_json_files = await EmbeddingActor.load_documents_from_folder(fixture_folder)
         assert len(valid_documents) == 1
         assert len(invalid_documents_content) == 1
         assert len(non_json_files) == 1
@@ -50,7 +50,7 @@ class TestEmbeddingPipelineService:
                             doc_name="Test Document", 
                             pages=["Page 1", "Page 2"], 
                             embedding_model_name="test_model")
-        document_chunks = await EmbeddingPipelineService.process_document(document, mock_embedding_model, chunk_size=5, overlap=2) 
+        document_chunks = await EmbeddingActor.process_document(document, mock_embedding_model, chunk_size=5, overlap=2) 
         assert len(document_chunks) == 4
 
     @pytest.mark.asyncio
