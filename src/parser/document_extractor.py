@@ -34,6 +34,7 @@ class DoclingPDFExtractor(DocumentExtractor):
         pipeline_options = PdfPipelineOptions()
         pipeline_options.do_ocr = False  # pick what you need
         pipeline_options.generate_page_images = True
+        pipeline_options.do_table_structure = True  # pick what you need
         self.docling_extractor_without_ocr = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)  # switch to beta PDF backend
@@ -42,8 +43,9 @@ class DoclingPDFExtractor(DocumentExtractor):
 
         # create a DocumentConverter instance   with ocr
         pipeline_options = PdfPipelineOptions()
-        pipeline_options.generate_page_images = True
         pipeline_options.do_ocr = True  # pick what you need
+        pipeline_options.generate_page_images = True
+        pipeline_options.do_table_structure = True  # pick what you need
         self.docling_extractor_with_ocr = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)  # switch to beta PDF backend
