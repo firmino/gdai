@@ -3,7 +3,7 @@ import pytest
 from src.parser.document_extractor import DoclingPDFExtractor
 
 
-class TestDocumentExtractor:
+class TestParserDocumentExtractor:
     """
     Tests based on some public documents from Wikipedia stored as pdf
     """

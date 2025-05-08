@@ -17,10 +17,6 @@ class DocumentExtractor(ABC):
         """
         pass
 
-    @abstractmethod
-    def _format_output(dict):
-        pass
-
 
 class DoclingPDFExtractor(DocumentExtractor):
     """
@@ -40,6 +36,9 @@ class DoclingPDFExtractor(DocumentExtractor):
         if not os.path.exists(document_path):
             raise ValueError
 
+        # get the name of the document from full path
+        doc_name = self._get_document_name(document_path)
+
         # first try to extract text without OCR
         result = self.docling_extractor_without_ocr.convert(document_path)
         dict_result = result.document.export_to_dict()
@@ -50,9 +49,16 @@ class DoclingPDFExtractor(DocumentExtractor):
             dict_result = result.document.export_to_dict()
 
         # format the output to a Document object
-        document = self._format_output(dict_result)
+        document = self._format_output(doc_name, dict_result)
 
         return document
+
+    def _get_document_name(self, document_path: str) -> str:
+        """
+        Get the document name from the document path.
+        """
+        file_name = os.path.basename(document_path)
+        return file_name
 
     def _generate_docling_pdf_extractor(self, use_ocr: bool = False) -> Document:
         """
@@ -69,11 +75,10 @@ class DoclingPDFExtractor(DocumentExtractor):
         )
         return docling_extractor
 
-    def _format_output(self, dict_result) -> Document:
+    def _format_output(self, doc_name: str, dict_result: dict) -> Document:
         """
         Format the output to a Document object.
         """
- 
         # extract tables, images and text
         tables = self._extract_tables(dict_result["tables"])
         images = self._extract_images(dict_result["pictures"])
@@ -81,7 +86,7 @@ class DoclingPDFExtractor(DocumentExtractor):
 
         # create a Document object
         doc = Document(
-            doc_name="doc_name",
+            doc_name=doc_name,
             texts=pages_text,
             tables=tables,
             images=images,
