@@ -148,6 +148,7 @@ class EmbeddingDocumentService:
         Returns:
             list[DocumentChunk]: A list of processed DocumentChunk objects.
         """
+        
         document_chunks = await self._chunk_document(document)
         await self._embed_chunks(document_chunks, self.embedding_model)
         await self.repository.insert_document_metadata(document)

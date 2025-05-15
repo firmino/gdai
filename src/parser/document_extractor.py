@@ -34,7 +34,7 @@ class DoclingPDFExtractor(DocumentExtractor):
         """
         # check if the document exists
         if not os.path.exists(document_path):
-            raise ValueError
+            raise ValueError(f"Document {document_path} does not exist")
 
         # get the name of the document from full path
         doc_name = self._get_document_name(document_path)
