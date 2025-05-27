@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from docling.document_converter import DocumentConverter, InputFormat, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions
-from src.parser.schema import Table, Image, Text, Document
+from src.shared.schema import Table, Image, Text, Document
 
 
 class DocumentExtractor(ABC):
@@ -50,7 +50,6 @@ class DoclingPDFExtractor(DocumentExtractor):
 
         # format the output to a Document object
         document = self._format_output(doc_name, dict_result)
-
         return document
 
     def _get_document_name(self, document_path: str) -> str:

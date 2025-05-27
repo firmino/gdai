@@ -33,8 +33,11 @@ services:
       NAME: "rabbitmq1"
     volumes:
     - rabbitmq_data:/var/lib/rabbitmq 
-
-
+    # - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+    # - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    networks:
+      - app_network
+   
   fastapi-app:
     container_name: fastapi-app
     build:
@@ -51,7 +54,6 @@ services:
     networks:
       - app_network
   
-
   nginx:
     profiles:
       - production

@@ -25,7 +25,6 @@ async def ping():
     return "pong!"
 
 
-app.include_router(admin_router, prefix="/admin")
 app.include_router(document_router, prefix="/document")
 app.include_router(auth_router, prefix="/auth")
 

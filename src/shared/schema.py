@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from typing import Optional
 
 
@@ -23,6 +23,27 @@ class Text(BaseModel):
         """
         return f"Page {self.page}: {self.text[:500]}..."
 
+    def __len__(self) -> int:
+        """
+        Return the length of the text content.
+
+        Returns:
+            int: The length of the text content.
+        """
+        return len(self.text)
+
+    def __getitem__(self, key):
+        """
+        Permite fatiar o conteúdo do texto como uma string normal.
+
+        Args:
+            key (int ou slice): Índice ou fatia a ser acessada.
+
+        Returns:
+            str: Parte do texto correspondente.
+        """
+        return self.text[key]
+
 
 class Image(BaseModel):
     """
@@ -35,7 +56,7 @@ class Image(BaseModel):
         width (int): The width of the image in pixels.
         height (int): The height of the image in pixels.
     """
-
+    
     page: int
     position_x: int
     position_y: int
@@ -83,6 +104,8 @@ class Document(BaseModel):
     the original document file.
 
     Attributes:
+        tenant_id (Optional[str]): Identifier for the tenant. Defaults to empty string.
+        doc_id (str): Unique identifier for the document.
         doc_name (str): The name or title of the document.
         texts (list[Text]): List of text elements extracted from the document.
         tables (Optional[list[Table]]): List of tables extracted from the document, if any.
@@ -90,6 +113,7 @@ class Document(BaseModel):
     """
 
     tenant_id: Optional[str] = Field(default="")
+    doc_id: Optional[str] = Field(default="")
     doc_name: str
     texts: list[Text]
     tables: Optional[list[Table]] = Field(default_factory=list)
@@ -103,3 +127,61 @@ class Document(BaseModel):
             str: A string displaying the document ID, name, and number of pages.
         """
         return f"Name: {self.doc_name}, Pages: {len(self.texts)}"
+
+
+class DocumentChunk(BaseModel):
+    """
+    Represents a chunk of text extracted from a document.
+
+    Attributes:
+        chunk_id (str): Unique identifier for the text chunk.
+        tenant_id (str): Identifier for the tenant.
+        doc_id (str): Unique identifier for the document.
+        chunk_text (str): The text content of the chunk.
+        page_number (int): Page number from which the chunk was extracted.
+        begin_offset (int): Starting offset within the page.
+        end_offset (int): Ending offset within the page.
+        embedding (Optional[list[float]]): Embedding vector for the text chunk, if available.
+        doc_id (str): The ID of the document the chunk belongs to.
+    """
+
+    tenant_id: str
+    chunk_id: str
+    doc_id: str
+    doc_name: str
+    chunk_text: str = Field(min_length=1)
+    page_number: int = Field(ge=0)  # Must be >= 0
+    begin_offset: int = Field(ge=0)  # Must be >= 0
+    end_offset: int = Field(ge=0)  # Must be >= 0
+    embedding: Optional[list[float]] = Field(default_factory=list)
+
+    def __str__(self) -> str:
+        """
+        Return a human-readable string representation of the DocumentChunk.
+
+        Returns:
+            str: A string displaying the chunk ID, page number, and offsets.
+        """
+        return f"DocumentChunk(chunk_id={self.chunk_id}, page_number={self.page_number}, offsets=({self.begin_offset}, {self.end_offset}))"
+
+    @field_validator("end_offset")
+    def validate_end_offset(cls, value, info: ValidationInfo):
+        """
+        Validates that the end offset is greater than or equal to the begin offset.
+
+        Args:
+            value (int): The end offset to validate.
+            info (ValidationInfo): Additional validation context.
+
+        Returns:
+            int: The validated end offset.
+
+        Raises:
+            ValueError: If the end offset is less than the begin offset.
+        """
+        begin_offset = info.data["begin_offset"]
+        if begin_offset is None:
+            raise ValueError("begin_offset must be provided before validating end_offset")
+        if value < begin_offset:
+            raise ValueError("end_offset must be greater than or equal to begin_offset")
+        return value

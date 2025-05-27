@@ -6,10 +6,9 @@ CREATE TABLE documents (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     tenant_id TEXT NOT NULL, 
-    pages TEXT[] NOT NULL,  -- Array de strings para as páginas
-    embedding_model_name TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
 
 -- Tabela de chunks dos documentos com vetores
 CREATE TABLE document_chunks (

@@ -1,64 +1,27 @@
-"""
-This module provides a repository for managing documents and their associated text chunks
-in a PostgreSQL database using pgvector. It includes methods for creating tables,
-inserting data, and performing searches.
-
-Classes:
-    DocumentRepository: A repository for managing documents and document chunks.
-"""
+"""Repository for managing documents and chunks in PostgreSQL with pgvector."""
 
 from src.shared.database import PGVectorDatabase
-from src.embedding_pipeline.schema import Document, DocumentChunk
+from src.shared.schema import Document, DocumentChunk
 from typing import List
 
 
 class DocumentRepository:
-    """
-    A repository for managing documents and document chunks in a PostgreSQL database using pgvector.
-
-    Methods:
-       
-        insert_document(document: Document, document_chunks: List[DocumentChunk]) -> None:
-            Inserts a document and its associated chunks into the database.
-
-        clean_database() -> None:
-            Clears the entire database by deleting all data from tables.
-
-        delete_document_content(document_id: str) -> None:
-            Deletes all content associated with a specific document.
-
-        get_document_metadata(document_id: str) -> dict:
-            Retrieves metadata for a specific document by its ID.
-
-        search_documents_by_keyword(search_keyword: str, limit: int, offset: int) -> List[dict]:
-            Searches for document chunks based on a keyword.
-
-        search_documents_by_similarity(embedded_query: List[float], limit: int) -> List[dict]:
-            Searches for document chunks based on vector similarity.
-    """
+    """Manages documents and chunks in a PostgreSQL database with pgvector."""
 
     def __init__(self):
-        """
-        Initializes the DocumentRepository with a PostgreSQL connection.
-        """
+        """Initialize repository."""
 
     async def get_document_by_id(self, document_id: str) -> Document:
-        """
-        Retrieves a document by its ID.
-        Args:
-            document_id (str): The ID of the document to retrieve.
-        Returns:
-            Document: The retrieved document.
-        """
+        """Get document by ID."""
         async with PGVectorDatabase.get_connection() as connection:
             result = await connection.fetchrow(
                 """SELECT id, 
-                                                        name, 
-                                                        tenant_id, 
-                                                        pages, 
-                                                        embedding_model_name 
-                                                FROM documents 
-                                                WHERE id = $1""",
+                          name, 
+                          tenant_id, 
+                          pages, 
+                          embedding_model_name 
+                    FROM documents 
+                    WHERE id = $1""",
                 document_id,
             )
             if result is None:
@@ -67,26 +30,21 @@ class DocumentRepository:
             return doc
 
     async def get_document_chunk_by_id(self, chunk_id: str) -> DocumentChunk:
-        """
-        Retrieves document chunks associated with a specific document ID.
-        Args:
-            chunk_id (str): The ID of the document chunk.
-        Returns:
-            List[DocumentChunk]: A list of document chunks associated with the document.
-        """
+        """Get document chunk by ID."""
         async with PGVectorDatabase.get_connection() as connection:
             result = await connection.fetchrow(
-                    """SELECT id, 
-                            tenant_id, 
-                            chunk_text, 
-                            page_number, 
-                            begin_offset, 
-                            end_offset, 
-                            embedding, 
-                            fk_doc_id  
+                """SELECT id, 
+                              tenant_id, 
+                              chunk_text, 
+                              page_number, 
+                              begin_offset, 
+                              end_offset, 
+                              embedding, 
+                              fk_doc_id  
                     FROM document_chunks 
                     WHERE id = $1""",
-                    chunk_id,)
+                chunk_id,
+            )
 
             if result is None:
                 return None
@@ -103,32 +61,26 @@ class DocumentRepository:
         return doc_chunk
 
     async def insert_document(self, document: Document, document_chunks: List[DocumentChunk]):
-        """
-        Inserts a document and its associated chunks into the database.
-
-        Args:
-            document (Document): The document to insert.
-            document_chunks (List[DocumentChunk]): The chunks associated with the document.
-
-        Returns:
-            None
-        """
+        """Insert document and chunks into database."""
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction():
+                    print(f""" INSERT INTO documents (id, tenant_id, name)
+                        VALUES ({ document.doc_id}, {document.tenant_id}, {document.doc_name})
+                        ON CONFLICT (id) DO NOTHING;
+                        """)
+
                     await connection.execute(
                         """
-                        INSERT INTO documents (id, tenant_id, name, pages, embedding_model_name)
-                        VALUES ($1, $2, $3, $4, $5)
+                        INSERT INTO documents (id, tenant_id, name)
+                        VALUES ($1, $2, $3)
                         ON CONFLICT (id) DO NOTHING;
                         """,
                         document.doc_id,
                         document.tenant_id,
-                        document.doc_name,
-                        document.pages,
-                        document.embedding_model_name,
+                        document.doc_name
                     )
-
+                  
                     for chunk in document_chunks:
                         await connection.execute(
                             """
@@ -150,13 +102,7 @@ class DocumentRepository:
             print(f"Error inserting document: {e}")
 
     async def delete_document(self, document_id: str):
-        """
-        Deletes a specific document by its ID.
-        Args:
-            document_id (str): The ID of the document to delete.
-        Returns:
-            None
-        """
+        """Delete document by ID."""
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction():
@@ -166,12 +112,7 @@ class DocumentRepository:
             print(f"Error deleting document: {e}")
 
     async def clean_tenant_database(self, tenant_id: str):
-        """
-        Clears the entire database by deleting all data from tables.
-
-        Returns:
-            None
-        """
+        """Delete all documents and chunks for a tenant."""
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction():

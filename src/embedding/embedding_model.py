@@ -1,38 +1,11 @@
-"""
-This module provides classes and methods for generating text embeddings using
-various embedding models. It includes a base class for embedding models and
-a specific implementation for the Cohere embedding model.
-
-Classes:
-    EmbeddingModel:
-        A base class for embedding models. It defines the interface for
-        embedding single or multiple texts.
-
-    CohereEmbeddingModel:
-        A specific implementation of the EmbeddingModel that uses the Cohere
-        API to generate embeddings.
-
-Usage:
-    The `EmbeddingModel` class is intended to be subclassed by specific
-    embedding model implementations. The `CohereEmbeddingModel` provides
-    an example of such an implementation.
-
-Example:
-    >>> from embedding import CohereEmbeddingModel
-    >>> model = CohereEmbeddingModel()
-    >>> embedding = await model.generate_text_embedding("Sample text")
-    >>> embeddings = await model.generate_texts_embeddings(["Text 1", "Text 2"])
-    >>> print(model)
-    cohere/embed-english-v3.0
-"""
 
 import os
 import cohere
 from dotenv import load_dotenv
 from abc import ABC, abstractmethod
-from src.embedding_pipeline.exceptions import InvalidAPIKeyException
+from src.embedding.exceptions import InvalidAPIKeyException
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 class EmbeddingModel(ABC):
