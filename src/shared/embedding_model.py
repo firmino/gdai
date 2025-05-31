@@ -1,11 +1,7 @@
-
 import os
 import cohere
-from dotenv import load_dotenv
 from abc import ABC, abstractmethod
-from src.embedding.exceptions import InvalidAPIKeyException
-
-load_dotenv(override=True)
+from src.shared.conf import Config
 
 
 class EmbeddingModel(ABC):
@@ -62,41 +58,20 @@ class CohereEmbeddingModel(EmbeddingModel):
     def __init__(self):
         """
         Initialize the Cohere embedding model.
-
-        Args:
-            api_key (str): The API key for the Cohere service. If not provided,
-                           it will be loaded from the environment.
         """
         self.model = "embed-v4.0"
         model_name = f"cohere/{self.model}"
         super().__init__(model_name)
-        self.api_key = CohereEmbeddingModel.get_api_key()   
         self.cohere = None
         self.SEARCH_DOCUMENT_TYPE = "search_query"
 
     @staticmethod
-    async def create() -> "CohereEmbeddingModel":
+    async def create(api_key: str) -> "CohereEmbeddingModel":
         embedding_model = CohereEmbeddingModel()
-        embedding_model.cohere = cohere.AsyncClient(api_key=embedding_model.api_key)
+        embedding_model.api_key = api_key
+        embedding_model.cohere = cohere.AsyncClient(api_key=api_key)
         return embedding_model
 
-    @staticmethod
-    def get_api_key() -> str:
-        """
-        Get the Cohere API key from the environment.
-
-        Returns:
-            str: The Cohere API key.
-
-        Raises:
-            InvalidAPIKeyException: If the API key is not found.
-        """
-        api_key = os.getenv("COHERE_API_KEY", None)
-        if not api_key:
-            raise InvalidAPIKeyException("Cohere API key is required.")
-        return api_key
-
-    
     async def generate_texts_embeddings(self, texts: list[str]) -> list[list[float]]:
         """
         Generate embeddings for multiple texts using the Cohere API.
@@ -110,11 +85,13 @@ class CohereEmbeddingModel(EmbeddingModel):
         Raises:
             Exception: If the API call fails.
         """
+        if not texts:
+            raise ValueError("The list of texts cannot be empty.")
+        if any(not text.strip() for text in texts):
+            raise ValueError("The texts cannot be empty strings.")
         if len(texts) > 96:
-            raise ValueError("The maximum number of texts is 1000.")
-
-        try:    
-
+            raise ValueError("The maximum number of texts is 96.")
+        try:
             res = await self.cohere.embed(
                 texts=texts,
                 model=self.model,
@@ -123,4 +100,22 @@ class CohereEmbeddingModel(EmbeddingModel):
             )
             return res.embeddings.float_
         except Exception as e:
-            raise Exception(f"Failed to generate embeddings for texts: {e}")
+            raise Exception(f"Failed to generate embeddings for texts: {e}") from e
+
+class ModelFactory:
+    """
+    A factory class to create instances of embedding models.
+    """
+
+    @staticmethod
+    async def create_embedding_model() -> EmbeddingModel:
+        """
+        Create an instance of the specified embedding model.
+
+        Returns:
+            EmbeddingModel: An instance of the specified embedding model.
+        """
+        if Config.EMBEDDING_MODEL == "cohere/embed-v4.0":
+            return await CohereEmbeddingModel.create(Config.EMBEDDING_MODEL_API_KEY)
+        else:
+            raise ValueError(f"Unsupported embedding model: {Config.EMBEDDING_MODEL}")

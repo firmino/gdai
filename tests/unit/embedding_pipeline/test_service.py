@@ -2,10 +2,10 @@ import os
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock
-from src.embedding_pipeline.service import EmbeddingActor
-from src.embedding_pipeline.schema import Document, DocumentInput
-from src.embedding_pipeline.embedding import EmbeddingModel
-from src.embedding_pipeline.repository import DocumentRepository
+from src_pipeline.service import EmbeddingActor
+from src_pipeline.schema import Document, DocumentInput
+from src_pipeline.embedding import EmbeddingModel
+from src_pipeline.repository import DocumentRepository
 
 
 class TestEmbeddingPipelineService:

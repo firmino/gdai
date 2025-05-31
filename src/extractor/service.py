@@ -1,7 +1,7 @@
 import os
 import uuid
-from src.parser.document_extractor import DocumentExtractor
-from src.parser.exceptions import FileNotFoundException
+from src.extractor.document_extractor import DocumentExtractor
+from src.extractor.exceptions import FileNotFoundException
 from src.shared.schema import Document
 
 

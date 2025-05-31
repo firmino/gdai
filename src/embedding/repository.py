@@ -65,11 +65,6 @@ class DocumentRepository:
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction():
-                    print(f""" INSERT INTO documents (id, tenant_id, name)
-                        VALUES ({ document.doc_id}, {document.tenant_id}, {document.doc_name})
-                        ON CONFLICT (id) DO NOTHING;
-                        """)
-
                     await connection.execute(
                         """
                         INSERT INTO documents (id, tenant_id, name)

@@ -4,7 +4,7 @@ import os
 import json
 import aiofiles
 from src.shared.schema import Document, DocumentChunk
-from src.embedding.embedding_model import EmbeddingModel
+from src.shared.embedding_model import EmbeddingModel
 from src.embedding.repository import DocumentRepository
 
 

@@ -1,61 +1,80 @@
 import os
+import json
 import logging
 import asyncio
-from dotenv import load_dotenv
-from src.shared.rabbitmq_broker import dramatiq # with broked configured
-from src.embedding.embedding_model import CohereEmbeddingModel
-from src.embedding.repository import DocumentRepository 
+import psutil
+from time import time
+from src.shared.broker import dramatiq  # with configured broked
+from src.embedding.conf import Config
+from src.embedding.repository import DocumentRepository
 from src.embedding.service import EmbeddingDocumentService
+from src.shared.embedding_model import ModelFactory
 
-
-load_dotenv(override=True)
 logger = logging.getLogger("ACTOR_EMBEDDING")
 
-EXTRACTED_DOC_PATH = os.getenv("FOLDER_EXTRACTED_DOC_PATH")
-if not os.path.exists(EXTRACTED_DOC_PATH):
-    raise ValueError(f"Extracted document path {EXTRACTED_DOC_PATH} does not exist")
-
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE"))
-if CHUNK_SIZE is None:
-    raise ValueError("CHUNK_SIZE environment variable is not set.")
-
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP"))
-if CHUNK_OVERLAP is None:
-    raise ValueError("CHUNK_OVERLAP environment variable is not set.")
-
-EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL")
-if EMBEDDING_MODEL_NAME is None:
-    raise ValueError("EMBEDDING_MODEL environment variable is not set.")
-
-embedding_model = None
-if EMBEDDING_MODEL_NAME == "cohere/embed-v4.0":
-    embedding_model = asyncio.run(CohereEmbeddingModel.create())
-if embedding_model is None:
-    raise ValueError(f"Unsupported embedding model: {EMBEDDING_MODEL_NAME}")
+try:
+    document_repository = DocumentRepository()
+    embedding_model = asyncio.run(ModelFactory.create_embedding_model())
+    embedding_service = EmbeddingDocumentService(
+        embedding_model=embedding_model,
+        chunk_size=Config.CHUNK_SIZE,
+        chunk_overlap=Config.CHUNK_OVERLAP,
+        document_repository=document_repository,
+    )
+    logger.info(f"Embedding service initialized successfully with model: {str(embedding_model) }")
+except Exception as e:
+    logger.critical(f"Failed to initialize embedding components: {str(e)}")
+    raise RuntimeError("Embedding service initialization failed") from e
 
 
-QUEUE_NAME = os.getenv("RABBIT_MQ_QUEUE_EMBEDDING_DOCUMENTS")
-if QUEUE_NAME is None:
-    raise ValueError("RABBIT_MQ_QUEUE_EMBEDDING_DOCUMENTS environment variable is not set.")
+@dramatiq.actor(queue_name=Config.RABBIT_MQ_QUEUE_EMBEDDING_DOCUMENTS, max_retries=Config.MAX_RETRIES, min_backoff=Config.RETRY_DELAY)
+def embedding_document(message_data: dict):
+    start_time = time()
+    try:
+        # Validate that the incoming message is a dictionary
+        # This ensures we can access expected fields safely
+        if not isinstance(message_data, dict):
+            logger.error(f"Invalid message data type: {type(message_data)}")
+            raise TypeError("message_data must be a dictionary")
 
+        document_name = message_data.get("document_name")
+        if not document_name:
+            logger.error("Missing document_name in message data")
+            raise ValueError("document_name is required in message data")
 
-document_repository = DocumentRepository()
-embedding_service = EmbeddingDocumentService(
-    embedding_model=embedding_model, 
-    document_repository=document_repository, 
-    chunk_size=CHUNK_SIZE, 
-    chunk_overlap=CHUNK_OVERLAP
-)
+        logger.info(f"Received document for embedding: {document_name}")
 
+        # Validate that the document name is provided
+        document_full_path = os.path.join(Config.FOLDER_EXTRACTED_DOC_PATH, document_name)
+        if not os.path.exists(document_full_path):
+            logger.error(f"Document file {document_full_path} does not exist.")
 
+        # Validate that the document file exists on disk
+        try:
+            with open(document_full_path, "r", encoding="utf-8") as f:
+                document_content = json.load(f)
+            if not isinstance(document_content, dict):
+                logger.error("Document content is not a valid JSON object")
+                raise ValueError("Document content must be a valid JSON object")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse document JSON: {str(e)}")
+            raise ValueError(f"Invalid JSON format in document: {str(e)}")
 
-@dramatiq.actor(queue_name="embedding_documents")
-def embedding_document(document: str):
-    logger.info(f"Received document for embedding: {document}")
-    document_full_path = os.path.join(EXTRACTED_DOC_PATH, document)
-    if not os.path.exists(document_full_path):
-        logger.error(f"Document file {document_full_path} does not exist.")
-        raise FileNotFoundError(f"Document file {document_full_path} does not exist.")
-    logger.info(f"Beginning embedding for document {document} at {document_full_path}")
-    asyncio.run(embedding_service.process_document(document_full_path))
-    logger.info(f"Document embedding for {document} completed successfully")
+        # Embedding can be memory-intensive, so we verify we have enough resources
+        mem = psutil.virtual_memory()
+        if mem.percent > Config.MAX_MEMORY_USAGE_PERCENT:
+            logger.error(f"Insufficient memory to process embedding (Usage: {mem.percent}%)")
+            raise RuntimeError(f"System memory usage too high ({mem.percent}%) for safe embedding processing")
+        try:
+            logger.info(f"Beginning embedding for document {document_name} at {document_full_path}")
+            asyncio.run(embedding_service.process_document(document_full_path))
+            process_time = time() - start_time
+            logger.info(f"Document embedding for {document_name} completed successfully in {process_time:.2f}s")
+        except Exception as e:
+            logger.error(f"Error during embedding process for document {document_name}: {str(e)}")
+            raise RuntimeError(f"Embedding process failed for document {document_name}") from e
+
+    except Exception as e:
+        # Log with context information for diagnostics
+        logger.exception(f"Error processing document for embedding: {str(e)}")
+        raise

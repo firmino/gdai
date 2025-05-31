@@ -1,46 +1,57 @@
-import os
 import asyncpg
 from pgvector.asyncpg import register_vector
-from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+from src.shared.conf import Config
 
-
-load_dotenv()
 
 
 class PGVectorDatabase:
     """
-    A class for interacting with a Postgres database using pgvector.
+    A class for interacting with a PostgreSQL database using pgvector extension.
+    
+    This class manages database connections using a connection pool and provides
+    methods for obtaining connections with the pgvector extension registered.
+    
+    Attributes:
+        _pool (asyncpg.Pool): Singleton connection pool for database interactions.
     """
+
 
     _pool = None
 
     @classmethod 
     async def create_connection_pool(cls):
         """
-        Create a connection pool to the pgvector database.
-        """
-        user = os.environ.get("PGVECTOR_USER")
-        password = os.environ.get("PGVECTOR_PASSWORD")
-        database = os.environ.get("PGVECTOR_DATABASE")
-        host = os.environ.get("PGVECTOR_HOST")
-        port = int(os.environ.get("PGVECTOR_PORT"))
-        min_connections = int(os.environ.get("PGVECTOR_MIN_POOL_CONNECTIONS"))
-        max_connections = int(os.environ.get("PGVECTOR_MAX_POOL_CONNECTIONS"))
-
-        if not all([user, password, database, host, port]):
-            raise ValueError("One or more PGVECTOR_ environment variables are not set.")
-
-        pool = await asyncpg.create_pool(user=user, password=password, database=database, host=host, port=port, min_size=min_connections, max_size=max_connections)
+        Create a new connection pool to the PostgreSQL database.
+        
+        This method establishes a new pool of connections to the PostgreSQL database
+        using the configuration parameters from the Config class.
+        
+        Returns:
+            asyncpg.Pool: A newly created connection pool.
+        
+        Raises:
+            asyncpg.PostgresError: If connecting to the database fails.
+        """ 
+        pool = await asyncpg.create_pool(user=Config.PGVECTOR_USER, 
+                                         password=Config.PGVECTOR_PASSWORD, 
+                                         database=Config.PGVECTOR_DATABASE, 
+                                         host=Config.PGVECTOR_HOST, 
+                                         port=Config.PGVECTOR_PORT, 
+                                         min_size=Config.PGVECTOR_MIN_POOL_CONNECTIONS, 
+                                         max_size=Config.PGVECTOR_MAX_POOL_CONNECTIONS)
         return pool
 
     @classmethod
     async def get_connection_pool(cls):
         """
-        Get a connection to the pgvector database and register the vector extension.
-
+        Get or create a connection pool to the pgvector database.
+        
+        This method returns the existing connection pool if it's available,
+        or creates a new one if it doesn't exist or is closed.
+        
         Returns:
-            asyncpg.Connection: A connection to the pgvector database.
+            asyncpg.Pool: The connection pool instance.
         """
         if cls._pool is None or  cls._pool._closed:  
             cls._pool = await cls.create_connection_pool()
@@ -52,10 +63,20 @@ class PGVectorDatabase:
     @asynccontextmanager
     async def get_connection(cls):
         """
-        Get a connection from the connection pool.
-
-        Returns:
-            asyncpg.Connection: A connection from the pool.
+        Get a connection from the connection pool with pgvector extension registered.
+        
+        This asynchronous context manager acquires a connection from the pool,
+        registers the pgvector extension, and ensures the connection is properly
+        released back to the pool when done.
+        
+        Yields:
+            asyncpg.Connection: A database connection with pgvector extension registered.
+        
+        Example:
+            ```python
+            async with PGVectorDatabase.get_connection() as conn:
+                result = await conn.fetch("SELECT * FROM vector_table")
+            ```
         """
         pool = await cls.get_connection_pool() 
         conn = await pool.acquire()

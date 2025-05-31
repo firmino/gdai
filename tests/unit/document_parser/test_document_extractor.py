@@ -1,6 +1,6 @@
 import os
 import pytest
-from src.parser.document_extractor import DoclingPDFExtractor
+from src.extractor.document_extractor import DoclingPDFExtractor
 
 
 class TestParserDocumentExtractor:

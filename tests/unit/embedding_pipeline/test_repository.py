@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
-from src.embedding_pipeline.schema import Document, DocumentChunk
-from src.embedding_pipeline.repository import DocumentRepository
+from src_pipeline.schema import Document, DocumentChunk
+from src_pipeline.repository import DocumentRepository
 
 
 class TestDocumentRepository:

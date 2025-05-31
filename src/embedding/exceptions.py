@@ -3,6 +3,7 @@ class InvalidAPIKeyException(Exception):
     Exception raised when an invalid API key is provided.
     """
 
+
 class InvalidDocumentContentException(Exception):
     """
     Exception raised when a document is invalid.

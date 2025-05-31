@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from typing import Optional
 
-
 class Text(BaseModel):
     """
     Represents a text content extracted from a document page.
@@ -56,7 +55,7 @@ class Image(BaseModel):
         width (int): The width of the image in pixels.
         height (int): The height of the image in pixels.
     """
-    
+
     page: int
     position_x: int
     position_y: int
@@ -185,3 +184,83 @@ class DocumentChunk(BaseModel):
         if value < begin_offset:
             raise ValueError("end_offset must be greater than or equal to begin_offset")
         return value
+
+
+class QueryInput(BaseModel):
+    """Represents a user query with search parameters.
+    
+    Used to structure and validate search parameters submitted by users.
+    
+    Attributes:
+        tenant_id: Identifier for the tenant context of the query.
+        query: The search query text (1-1000 characters).
+        num_chunks: Number of relevant chunks to retrieve (1-1000, default: 10).
+        temperature: Controls randomness in response generation (0.0-1.0, default: 0.5).
+    """
+
+    tenant_id: str
+    query: str = Field(min_length=1, max_length=1000)
+    num_chunks: int = Field(ge=1, le=1000, default=10)
+    temperature: float = Field(ge=0.0, le=1.0, default=0.5)
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation of the QueryInput.
+        
+        Returns:
+            A string displaying the query and parameters.
+        """
+        return f"QueryInput(query={self.query}, num_chunks={self.num_chunks}, temperature={self.temperature})"
+
+
+class ChunkQueryResult(BaseModel):
+    """Represents a single chunk result from a search query.
+    
+    Stores individual search results with their relevance scores.
+    
+    Attributes:
+        tenant_id: Identifier for the tenant context.
+        query: The search query text that produced this result.
+        chunk: The document chunk that matches the query.
+        similarity: Similarity score between the query and the chunk.
+    """
+    tenant_id: str
+    query: str
+    chunk: DocumentChunk
+    similarity: float
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation of the ChunkQueryResult.
+        
+        Returns:
+            A string displaying query, chunk ID, and similarity score.
+        """
+        return f"ChunkQueryResult(query={self.query}, chunk_id={self.chunk.chunk_id}, similarity={self.similarity})"
+
+class QueryOutput(BaseModel):
+    """Represents the complete response to a query.
+    
+    Encapsulates the complete response to a user query, including both 
+    the generated answer and the supporting evidence chunks.
+    
+    Attributes:
+        tenant_id: Identifier for the tenant context.
+        query: The original search query text.
+        answer: Generated answer text based on the query and relevant chunks.
+        chunk_result: List of chunks used to generate the answer.
+        num_chunks: Number of chunks used in the response (0-1000, default: 0).
+        temperature: Temperature value used for answer generation (0.0-1.0, default: 0.5).
+    """
+    tenant_id: str
+    query: str
+    answer: str
+    chunk_result: list[ChunkQueryResult] = Field(default_factory=list)
+    num_chunks: int = Field(ge=0, le=1000, default=0)
+    temperature: float = Field(ge=0.0, le=1.0, default=0.5)
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation of the QueryOutput.
+        
+        Returns:
+            A string displaying query, answer, and chunk count.
+        """
+        return f"QueryOutput(query={self.query}, answer={self.answer}, num_chunks={self.num_chunks})"
