@@ -23,6 +23,7 @@ class ExtractDocumentService:
         """
         if not os.path.exists(document_path):
             raise FileNotFoundException()
+        
         document = self.document_extractor.extract_document_data(document_path)
         document.tenant_id = tenant_id
         document.doc_id = str(uuid.uuid4())

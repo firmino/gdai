@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 logger = logging.getLogger("CONFIG_SHARED")
 
+
 class Config:
     """Centralized shared application configuration."""
 
@@ -19,12 +20,16 @@ class Config:
     PGVECTOR_DATABASE = os.getenv("PGVECTOR_DATABASE")
     PGVECTOR_HOST = os.getenv("PGVECTOR_HOST")
     PGVECTOR_PORT = int(os.getenv("PGVECTOR_PORT"))
-    PGVECTOR_MIN_POOL_CONNECTIONS=int(os.getenv("PGVECTOR_MIN_POOL_CONNECTIONS"))
-    PGVECTOR_MAX_POOL_CONNECTIONS=int(os.getenv("PGVECTOR_MAX_POOL_CONNECTIONS"))
+    PGVECTOR_MIN_POOL_CONNECTIONS = int(os.getenv("PGVECTOR_MIN_POOL_CONNECTIONS"))
+    PGVECTOR_MAX_POOL_CONNECTIONS = int(os.getenv("PGVECTOR_MAX_POOL_CONNECTIONS"))
 
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
-    EMBEDDING_MODEL_API_KEY = os.getenv("EMBEDDING_API_KEY") 
+    EMBEDDING_MODEL_API_KEY = os.getenv("EMBEDDING_API_KEY")
 
+    LLM_MODEL = os.getenv("SEARCH_LLM_MODEL")
+    LLM_MODEL_API_KEY = os.getenv("SEARCH_LLM_API_KEY")
+    LLM_MAX_TOKENS = int(os.getenv("SEARCH_LLM_MAX_TOKENS"))
+    LLM_TEMPERATURE = float(os.getenv("SEARCH_LLM_TEMPERATURE"))
 
     @classmethod
     def validate(cls):
@@ -59,6 +64,13 @@ class Config:
         if cls.PGVECTOR_MAX_POOL_CONNECTIONS < 0:
             logger.error("PGVECTOR_MAX_POOL_CONNECTIONS is not set")
             return False
+        if not cls.LLM_MAX_TOKENS:
+            logger.error("SEARCH_LLM_MAX_TOKENS is not set")
+            return False
+        if not cls.LLM_TEMPERATURE:
+            logger.error("SEARCH_LLM_TEMPERATURE is not set")
+            return False
+
         logger.info("Configuration validated successfully")
         return True
 

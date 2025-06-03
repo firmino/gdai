@@ -8,13 +8,13 @@ from src.shared.broker import dramatiq  # with configured broked
 from src.embedding.conf import Config
 from src.embedding.repository import DocumentRepository
 from src.embedding.service import EmbeddingDocumentService
-from src.shared.embedding_model import ModelFactory
+from src.shared.embedding_model import EmbeddingModelFactory
 
 logger = logging.getLogger("ACTOR_EMBEDDING")
 
 try:
     document_repository = DocumentRepository()
-    embedding_model = asyncio.run(ModelFactory.create_embedding_model())
+    embedding_model = asyncio.run(EmbeddingModelFactory.create())
     embedding_service = EmbeddingDocumentService(
         embedding_model=embedding_model,
         chunk_size=Config.CHUNK_SIZE,

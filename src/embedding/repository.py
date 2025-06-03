@@ -3,7 +3,8 @@
 from src.shared.database import PGVectorDatabase
 from src.shared.schema import Document, DocumentChunk
 from typing import List
-
+import logging
+logger = logging.getLogger("EMBEDDING_REPOSITORY")
 
 class DocumentRepository:
     """Manages documents and chunks in a PostgreSQL database with pgvector."""
@@ -20,7 +21,7 @@ class DocumentRepository:
                           tenant_id, 
                           pages, 
                           embedding_model_name 
-                    FROM documents 
+                    FROM document 
                     WHERE id = $1""",
                 document_id,
             )
@@ -41,7 +42,7 @@ class DocumentRepository:
                               end_offset, 
                               embedding, 
                               fk_doc_id  
-                    FROM document_chunks 
+                    FROM document_chunk 
                     WHERE id = $1""",
                 chunk_id,
             )
@@ -64,10 +65,10 @@ class DocumentRepository:
         """Insert document and chunks into database."""
         try:
             async with PGVectorDatabase.get_connection() as connection:
-                async with connection.transaction():
+                async with connection.transaction(): 
                     await connection.execute(
                         """
-                        INSERT INTO documents (id, tenant_id, name)
+                        INSERT INTO document (id, tenant_id, name)
                         VALUES ($1, $2, $3)
                         ON CONFLICT (id) DO NOTHING;
                         """,
@@ -75,11 +76,11 @@ class DocumentRepository:
                         document.tenant_id,
                         document.doc_name
                     )
-                  
+                    
                     for chunk in document_chunks:
                         await connection.execute(
                             """
-                            INSERT INTO document_chunks (id, chunk_text, page_number, begin_offset, end_offset, embedding, fk_doc_id, tenant_id)
+                            INSERT INTO document_chunk (id, chunk_text, page_number, begin_offset, end_offset, embedding, fk_doc_id, tenant_id)
                             VALUES ($1, $2, $3, $4, $5, $6::vector, $7, $8)
                             ON CONFLICT (id) DO NOTHING;
                             """,
@@ -94,15 +95,16 @@ class DocumentRepository:
                         )
 
         except Exception as e:
-            print(f"Error inserting document: {e}")
-
+            logger.error(f"Error inserting document: {e}")
+            
+            
     async def delete_document(self, document_id: str):
         """Delete document by ID."""
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction():
-                    await connection.execute("DELETE FROM document_chunks WHERE fk_doc_id = $1", document_id)
-                    await connection.execute("DELETE FROM documents WHERE id = $1", document_id)
+                    await connection.execute("DELETE FROM document_chunk WHERE fk_doc_id = $1", document_id)
+                    await connection.execute("DELETE FROM document WHERE id = $1", document_id)
         except Exception as e:
             print(f"Error deleting document: {e}")
 
@@ -111,7 +113,7 @@ class DocumentRepository:
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction():
-                    await connection.execute("DELETE FROM document_chunks where tenant_id = $1", tenant_id)
-                    await connection.execute("DELETE FROM documents where tenant_id = $1", tenant_id)
+                    await connection.execute("DELETE FROM document_chunk where tenant_id = $1", tenant_id)
+                    await connection.execute("DELETE FROM document where tenant_id = $1", tenant_id)
         except Exception as e:
             print(f"Error cleaning tenant database: {e}")

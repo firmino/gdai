@@ -40,11 +40,13 @@ class DoclingPDFExtractor(DocumentExtractor):
         doc_name = self._get_document_name(document_path)
 
         # first try to extract text without OCR
+        print(f"Extracting document {doc_name} without OCR...")
         result = self.docling_extractor_without_ocr.convert(document_path)
         dict_result = result.document.export_to_dict()
 
         # if method without ocr fails, try with ocr
         if len(dict_result["texts"]) == 0:
+            print(f"No text found in {doc_name} without OCR, trying with OCR...")
             result = self.docling_extractor_with_ocr.convert(document_path)
             dict_result = result.document.export_to_dict()
 

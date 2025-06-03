@@ -1,4 +1,3 @@
-import os
 import cohere
 from abc import ABC, abstractmethod
 from src.shared.conf import Config
@@ -102,13 +101,13 @@ class CohereEmbeddingModel(EmbeddingModel):
         except Exception as e:
             raise Exception(f"Failed to generate embeddings for texts: {e}") from e
 
-class ModelFactory:
+class EmbeddingModelFactory:
     """
     A factory class to create instances of embedding models.
     """
 
     @staticmethod
-    async def create_embedding_model() -> EmbeddingModel:
+    async def create() -> EmbeddingModel:
         """
         Create an instance of the specified embedding model.
 

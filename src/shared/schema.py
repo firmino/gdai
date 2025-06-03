@@ -201,7 +201,7 @@ class QueryInput(BaseModel):
     tenant_id: str
     query: str = Field(min_length=1, max_length=1000)
     num_chunks: int = Field(ge=1, le=1000, default=10)
-    temperature: float = Field(ge=0.0, le=1.0, default=0.5)
+   
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the QueryInput.
@@ -209,7 +209,7 @@ class QueryInput(BaseModel):
         Returns:
             A string displaying the query and parameters.
         """
-        return f"QueryInput(query={self.query}, num_chunks={self.num_chunks}, temperature={self.temperature})"
+        return f"QueryInput(query={self.query}, num_chunks={self.num_chunks})"
 
 
 class ChunkQueryResult(BaseModel):
@@ -224,7 +224,7 @@ class ChunkQueryResult(BaseModel):
         similarity: Similarity score between the query and the chunk.
     """
     tenant_id: str
-    query: str
+    query_id: str
     chunk: DocumentChunk
     similarity: float
 
@@ -234,7 +234,7 @@ class ChunkQueryResult(BaseModel):
         Returns:
             A string displaying query, chunk ID, and similarity score.
         """
-        return f"ChunkQueryResult(query={self.query}, chunk_id={self.chunk.chunk_id}, similarity={self.similarity})"
+        return f"ChunkQueryResult(query={self.query_id}, chunk_id={self.chunk.chunk_id}, similarity={self.similarity})"
 
 class QueryOutput(BaseModel):
     """Represents the complete response to a query.
