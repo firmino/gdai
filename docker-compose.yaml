@@ -1,88 +1,43 @@
 
 services:
-  weaviate:
-    image: semitechnologies/weaviate:latest
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
-      ENABLE_MODULES: ''
-      CLUSTER_HOSTNAME: 'node1'
-    volumes:
-      - weaviate_data:/var/lib/weaviate
-    networks:
-      - app_network
-
-  supertokens:
-    image: supertokens/supertokens-postgresql:latest
-    restart: unless-stopped
-    ports:
-      - "3567:3567"
-    environment:
-      POSTGRESQL_USER: supertokens
-      POSTGRESQL_PASSWORD: your_supertokens_password
-      POSTGRESQL_DATABASE: supertokens
-      POSTGRESQL_HOST: postgres
-      POSTGRESQL_PORT: 5432
-    depends_on:
-      - postgres
-    networks:
-      - app_network
-
-  postgres:
-    image: postgres:13-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: supertokens
-      POSTGRES_PASSWORD: your_supertokens_password
-      POSTGRES_DB: supertokens
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app_network
-
-  fastapi-app:
-    container_name: fastapi-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    expose:
-      - "8000"
-    environment:
-      WEAVIATE_URL: "http://weaviate:8080"
-      SUPERTOKENS_URL: "http://supertokens:3567"
-    depends_on:
-      - weaviate
-      - supertokens
-    networks:
-      - app_network
   
-
-  nginx:
-    profiles:
-      - production
-    image: nginx:alpine
-    container_name: nginx
-    restart: always
+  pgvector:
+    image: ankane/pgvector:latest
+    hostname: pgvector
+    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "5555:5432"
+    environment:
+      - POSTGRES_DB=vectordb
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpwd
     volumes:
-      - ./infra/nginx/gdai.conf:/etc/nginx/conf.d/gdai.conf
-      - ../ssl/fullchain.pem:/etc/letsencrypt/fullchain.pem
-      - ../ssl/privkey.pem:/etc/letsencrypt/privkey.pem
-    depends_on:
-      - fastapi-app
+      - ./infra/pgvector/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgvector_data:/var/lib/postgresql/data
     networks:
       - app_network
-    
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit1"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq1"
+    volumes:
+    - rabbitmq_data:/var/lib/rabbitmq 
+    networks:
+      - app_network
+       
 volumes:
-  weaviate_data:
-  postgres_data:
+  pgvector_data:
+  rabbitmq_data:
 
 networks:
   app_network:
