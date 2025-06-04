@@ -5,7 +5,7 @@ import psutil
 from time import time
 from src.shared.logger import logger
 from src.shared.broker import dramatiq  # with configured broked
-from src.embedding.conf import Config
+from src.shared.conf import Config
 from src.embedding.repository import DocumentRepository
 from src.embedding.service import EmbeddingDocumentService
 from src.shared.embedding_model import EmbeddingModelFactory
@@ -17,8 +17,8 @@ try:
     embedding_model = asyncio.run(EmbeddingModelFactory.create())
     embedding_service = EmbeddingDocumentService(
         embedding_model=embedding_model,
-        chunk_size=Config.CHUNK_SIZE,
-        chunk_overlap=Config.CHUNK_OVERLAP,
+        chunk_size=Config.EMBEDDING.CHUNK_SIZE,
+        chunk_overlap=Config.EMBEDDING.CHUNK_OVERLAP,
         document_repository=document_repository,
     )
     logger.info(f"Embedding service initialized successfully with model: {str(embedding_model) }")
@@ -27,7 +27,7 @@ except Exception as e:
     raise RuntimeError("Embedding service initialization failed") from e
 
 
-@dramatiq.actor(queue_name=Config.RABBIT_MQ_QUEUE_EMBEDDING_DOCUMENTS, max_retries=Config.MAX_RETRIES, min_backoff=Config.RETRY_DELAY)
+@dramatiq.actor(queue_name=Config.EMBEDDING.QUEUE, max_retries=Config.EMBEDDING.MAX_RETRIES, min_backoff=Config.EMBEDDING.RETRY_DELAY)
 def embedding_document(message_data: dict):
     start_time = time()
     try:
@@ -45,7 +45,7 @@ def embedding_document(message_data: dict):
         logger.info(f"Received document for embedding: {document_name}")
 
         # Validate that the document name is provided
-        document_full_path = os.path.join(Config.FOLDER_EXTRACTED_DOC_PATH, document_name)
+        document_full_path = os.path.join(Config.EMBEDDING.FOLDER_EXTRACTED_DOC_PATH, document_name)
         if not os.path.exists(document_full_path):
             logger.error(f"Document file {document_full_path} does not exist.")
 
@@ -62,7 +62,7 @@ def embedding_document(message_data: dict):
 
         # Embedding can be memory-intensive, so we verify we have enough resources
         mem = psutil.virtual_memory()
-        if mem.percent > Config.MAX_MEMORY_USAGE_PERCENT:
+        if mem.percent > Config.EMBEDDING.MAX_MEMORY_USAGE_PERCENT:
             logger.error(f"Insufficient memory to process embedding (Usage: {mem.percent}%)")
             raise RuntimeError(f"System memory usage too high ({mem.percent}%) for safe embedding processing")
         try:

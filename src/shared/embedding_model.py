@@ -114,7 +114,7 @@ class EmbeddingModelFactory:
         Returns:
             EmbeddingModel: An instance of the specified embedding model.
         """
-        if Config.EMBEDDING_MODEL == "cohere/embed-v4.0":
-            return await CohereEmbeddingModel.create(Config.EMBEDDING_MODEL_API_KEY)
+        if Config.AI.EMBEDDING_MODEL == "cohere/embed-v4.0":
+            return await CohereEmbeddingModel.create(Config.AI.EMBEDDING_MODEL_API_KEY)
         else:
-            raise ValueError(f"Unsupported embedding model: {Config.EMBEDDING_MODEL}")
+            raise ValueError(f"Unsupported embedding model: {Config.AI.EMBEDDING_MODEL}")

@@ -33,13 +33,13 @@ class PGVectorDatabase:
         Raises:
             asyncpg.PostgresError: If connecting to the database fails.
         """ 
-        pool = await asyncpg.create_pool(user=Config.PGVECTOR_USER, 
-                                         password=Config.PGVECTOR_PASSWORD, 
-                                         database=Config.PGVECTOR_DATABASE, 
-                                         host=Config.PGVECTOR_HOST, 
-                                         port=Config.PGVECTOR_PORT, 
-                                         min_size=Config.PGVECTOR_MIN_POOL_CONNECTIONS, 
-                                         max_size=Config.PGVECTOR_MAX_POOL_CONNECTIONS)
+        pool = await asyncpg.create_pool(user=Config.DB.PGVECTOR_USER, 
+                                         password=Config.DB.PGVECTOR_PASSWORD, 
+                                         database=Config.DB.PGVECTOR_DATABASE, 
+                                         host=Config.DB.PGVECTOR_HOST, 
+                                         port=Config.DB.PGVECTOR_PORT, 
+                                         min_size=Config.DB.PGVECTOR_MIN_POOL_CONNECTIONS, 
+                                         max_size=Config.DB.PGVECTOR_MAX_POOL_CONNECTIONS)
         return pool
 
     @classmethod

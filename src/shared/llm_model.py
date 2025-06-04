@@ -128,10 +128,10 @@ class LLMModelFactory:
         Returns:
             LLMModel: An instance of OpenAIModel.
         """
-        model_name = Config.LLM_MODEL
-        api_key = Config.LLM_MODEL_API_KEY
-        temperature = Config.LLM_TEMPERATURE
-        max_tokens = Config.LLM_MAX_TOKENS
+        model_name = Config.AI.LLM_MODEL
+        api_key = Config.AI.LLM_MODEL_API_KEY
+        temperature = Config.AI.LLM_TEMPERATURE
+        max_tokens = Config.AI.LLM_MAX_TOKENS
         if "openai" in model_name:
             openai_model_name = model_name.split("/")[1]
             return await OpenAIModel.create(openai_model_name, api_key, temperature, max_tokens)

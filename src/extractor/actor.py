@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import shutil
-from src.extractor.conf import Config
+from src.shared.conf import Config
 from src.shared.broker import dramatiq  # with broked configured
 from src.extractor.service import ExtractDocumentService
 from src.extractor.document_extractor import DoclingPDFExtractor
@@ -13,7 +13,7 @@ doc_extractor = DoclingPDFExtractor()
 service = ExtractDocumentService(doc_extractor)
 
 
-@dramatiq.actor(queue_name=Config.RABBIT_MQ_QUEUE_EXTRACT_DOCUMENT_DATA, max_retries=Config.MAX_RETRIES, min_backoff=Config.RETRY_DELAY)
+@dramatiq.actor(queue_name=Config.EXTRACTOR.QUEUE, max_retries=Config.EXTRACTOR.MAX_RETRIES, min_backoff=Config.EXTRACTOR.RETRY_DELAY)
 def document_extractor(document_data: dict):
     try:
         logger.info(f"Received document data: {document_data}")
@@ -25,7 +25,7 @@ def document_extractor(document_data: dict):
         if not tenant_id:
             logger.error("Tenant ID is required")
             raise ValueError("Tenant ID is required")
-        document_full_path = os.path.join(Config.FOLDER_RAW_DOC_PATH, document_name)
+        document_full_path = os.path.join(Config.EXTRACTOR.FOLDER_RAW_DOC_PATH, document_name)
 
         # Check if the file exists
         if not os.path.exists(document_full_path):
@@ -43,7 +43,7 @@ def document_extractor(document_data: dict):
             logger.error(f"Document file {document_full_path} is empty")
             raise ValueError(f"Document file {document_full_path} is empty")
 
-        if file_size > Config.MAX_FILE_SIZE_MB * 1024 * 1024:  # Limite configurável
+        if file_size > Config.EXTRACTOR.MAX_FILE_SIZE_MB * 1024 * 1024:  # Limite configurável
             logger.error(f"Document file {document_full_path} exceeds maximum allowed size")
             raise ValueError(f"Document file {document_full_path} exceeds maximum allowed size")
 
@@ -64,7 +64,7 @@ def document_extractor(document_data: dict):
             logger.error(f"Failed to serialize document {document_name}: {str(e)}")
             raise 
 
-        output_path = os.path.join(Config.FOLDER_EXTRACTED_DOC_PATH, f"{document_name}.json")
+        output_path = os.path.join(Config.EXTRACTOR.FOLDER_EXTRACTED_DOC_PATH, f"{document_name}.json")
         try:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)  # Verificar se o diretório de saída existe
 
@@ -74,9 +74,9 @@ def document_extractor(document_data: dict):
                 logger.error("Not enough disk space to save extracted document")
                 raise IOError("Not enough disk space to save extracted document")
 
-            with open(os.path.join(Config.FOLDER_EXTRACTED_DOC_PATH, f"{document_name}.json"), "w", encoding="utf-8") as f:
+            with open(os.path.join(Config.EXTRACTOR.FOLDER_EXTRACTED_DOC_PATH, f"{document_name}.json"), "w", encoding="utf-8") as f:
                 f.write(extracted_doc_data_json)
-            logger.info(f"Extracted document data saved to {os.path.join(Config.FOLDER_EXTRACTED_DOC_PATH, f'{document_name}.json')}")
+            logger.info(f"Extracted document data saved to {os.path.join(Config.EXTRACTOR.FOLDER_EXTRACTED_DOC_PATH, f'{document_name}.json')}")
         except IOError as e:
             logger.error(f"Failed to write extracted document to disk: {str(e)}")
             raise
