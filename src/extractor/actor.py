@@ -2,15 +2,13 @@ import os
 import sys
 import json
 import shutil
-import logging
 from src.extractor.conf import Config
 from src.shared.broker import dramatiq  # with broked configured
 from src.extractor.service import ExtractDocumentService
 from src.extractor.document_extractor import DoclingPDFExtractor
 from src.embedding.actor import embedding_document
+from src.shared.logger import logger
 
-
-logger = logging.getLogger("ACTOR_EXTRACTOR")
 doc_extractor = DoclingPDFExtractor()
 service = ExtractDocumentService(doc_extractor)
 

@@ -1,16 +1,16 @@
 import os
 import json
-import logging
 import asyncio
 import psutil
 from time import time
+from src.shared.logger import logger
 from src.shared.broker import dramatiq  # with configured broked
 from src.embedding.conf import Config
 from src.embedding.repository import DocumentRepository
 from src.embedding.service import EmbeddingDocumentService
 from src.shared.embedding_model import EmbeddingModelFactory
 
-logger = logging.getLogger("ACTOR_EMBEDDING")
+
 
 try:
     document_repository = DocumentRepository()

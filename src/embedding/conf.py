@@ -1,11 +1,11 @@
 import os
-import logging
 from dotenv import load_dotenv
 from pathlib import Path
+from src.shared.logger import logger
 
 # Carregar variáveis de ambiente
 load_dotenv(override=True)
-logger = logging.getLogger("CONFIG_EMBEDDING")
+
 
 
 class Config:

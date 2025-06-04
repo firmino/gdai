@@ -1,10 +1,8 @@
 import os
-import logging
 from dotenv import load_dotenv
-
+from src.shared.logger import logger
 
 load_dotenv(override=True)
-logger = logging.getLogger("CONFIG_SHARED")
 
 
 class Config:
@@ -77,3 +75,4 @@ class Config:
 
 # Validar configuração ao importar o módulo
 Config.validate()
+

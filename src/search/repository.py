@@ -1,11 +1,9 @@
 """Repository for managing documents and chunks in PostgreSQL with pgvector."""
 
 from src.shared.database import PGVectorDatabase
-from src.shared.schema import Document, DocumentChunk, ChunkQueryResult
+from src.shared.schema import  DocumentChunk, ChunkQueryResult
 from typing import List
-import logging
-
-logger = logging.getLogger("SEARCH_REPOSITORY")
+from src.shared.logger import logger
 
 
 class SearchRepository:

@@ -1,11 +1,8 @@
 import asyncio
-import logging
 from src.shared.embedding_model import EmbeddingModelFactory
 from src.shared.llm_model import LLMModelFactory, LLMModel
 from src.search.repository import SearchRepository
-
-
-logger = logging.getLogger("SEARCH_SERVICE")
+from src.shared.logger import logger
 
 
 

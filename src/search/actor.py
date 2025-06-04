@@ -1,5 +1,5 @@
 import asyncio  
-import logging
+from src.shared.logger import logger
 from src.shared.broker import dramatiq
 from src.search.repository import SearchRepository
 from src.search.service import SearchService
@@ -7,7 +7,6 @@ from src.shared.embedding_model import EmbeddingModelFactory
 from src.shared.llm_model import LLMModelFactory
 from src.search.conf import Config 
 
-logger = logging.getLogger("ACTOR_SEARCH")
 try:
     embedding_model = asyncio.run(EmbeddingModelFactory.create())
     llm_model = asyncio.run(LLMModelFactory.create())

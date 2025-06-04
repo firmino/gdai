@@ -3,8 +3,8 @@
 from src.shared.database import PGVectorDatabase
 from src.shared.schema import Document, DocumentChunk
 from typing import List
-import logging
-logger = logging.getLogger("EMBEDDING_REPOSITORY")
+from src.shared.logger import logger
+
 
 class DocumentRepository:
     """Manages documents and chunks in a PostgreSQL database with pgvector."""
