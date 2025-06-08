@@ -114,10 +114,6 @@ class SearchService:
         # Assemble complete answer from stored tokens
         tokens_result = await self.repository.get_tokens_by_message_id(message_id)
         answer_text = "".join([token for token in tokens_result])
-        print("-"*30)
-        print(query)
-        print("-"*30)
-        print("HERE: ", answer_text)
         # Update message with final answer
         await self.repository.update_message_text_and_status(message_id, answer_text)
         
@@ -127,7 +123,7 @@ class SearchService:
         return answer_text
 
 
-    async def answer_query(self, tenant_id: str, query_id: str, query: str, chunks_limit: int = 3) -> None:
+    async def answer_query(self, tenant_id: str, query_id: str, query: str, chunks_limit: int = 3) -> str:
         """
         Answer a query by searching for relevant documents.
         """
@@ -143,11 +139,15 @@ class SearchService:
                 return 
             print(f"TOTAL CHUNKS FOUND: {len(chunks_result)}")
             answer_text = await self._generate_answer(message_id, query, chunks_result)
-            logger.info(f"Generated answer for query '{query}' with ID '{query_id}': {answer_text}")
+            
+            print(f"ANSWER GENERATED: {answer_text}")
+            print(f"type of answer_text: {type(answer_text)}")
+            #logger.info(f"Generated answer for query '{query}' with ID '{query_id}': {answer_text}")
             # update the message status to completed
 
             # add chunks used to the message
-            await self.repository.add_chunks_to_message(message_id, chunks_result)
+            #await self.repository.add_chunks_to_message(message_id, chunks_result)
+            return answer_text
         except Exception as e:
             await self.repository.update_message_status(message_id, "failed")
             raise e

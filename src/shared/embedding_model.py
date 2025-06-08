@@ -1,4 +1,5 @@
 import cohere
+import asyncio
 from abc import ABC, abstractmethod
 from src.shared.conf import Config
 
@@ -97,6 +98,7 @@ class CohereEmbeddingModel(EmbeddingModel):
                 input_type=self.SEARCH_DOCUMENT_TYPE,
                 embedding_types=["float"],
             )
+            await asyncio.sleep(3)  # Small delay between batches
             return res.embeddings.float_
         except Exception as e:
             raise Exception(f"Failed to generate embeddings for texts: {e}") from e

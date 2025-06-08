@@ -47,7 +47,7 @@ def search_query(message_data: dict):
             raise ValueError("tenant_id, query_id, and query_text are required in message data")
         logger.info(f"Received search query for tenant: {tenant_id}, query_id: {query_id}")
         # Process the search query
-        asyncio.run(search_service.answer_query(tenant_id, query_id, query_text, chunks_limit=10))
+        asyncio.run(search_service.answer_query(tenant_id, query_id, query_text, chunks_limit=100))
     except Exception as e:
         logger.error(f"Error processing search query: {str(e)}")
         raise e from e  

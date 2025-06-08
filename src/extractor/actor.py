@@ -6,12 +6,13 @@ import logging
 from src.extractor.conf import Config
 from src.shared.broker import dramatiq  # with broked configured
 from src.extractor.service import ExtractDocumentService
-from src.extractor.document_extractor import DoclingPDFExtractor
+from src.extractor.document_extractor import DoclingPDFExtractor, PyMuPDFExtractor
 from src.embedding.actor import embedding_document
 
 
 logger = logging.getLogger("ACTOR_EXTRACTOR")
-doc_extractor = DoclingPDFExtractor()
+#doc_extractor = DoclingPDFExtractor()
+doc_extractor = PyMuPDFExtractor()
 service = ExtractDocumentService(doc_extractor)
 
 
@@ -52,7 +53,7 @@ def document_extractor(document_data: dict):
         # Start the document extraction process
         try:
             logger.info(f"Beginning document extraction for {document_name} at {document_full_path}")
-            extracted_doc_data = service.extract_data_from_document(tenant_id, document_full_path)
+            extracted_doc_data = service.extract_data_from_document(tenant_id, document_full_path) 
             logger.info(f"Document extraction completed for {document_name}")
         except Exception as e:
             logger.error(f"Failed to extract document {document_name}: {str(e)}")
