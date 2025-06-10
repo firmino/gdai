@@ -1,5 +1,5 @@
 import pytest
-from src.embedding_pipeline.schema import Document, DocumentChunk, DocumentInput
+from src.actor.embedding_pipeline.schema import Document, DocumentChunk, DocumentInput
 
 
 class TestSchemaDocumentInput:

@@ -1,7 +1,7 @@
 import pytest
-from src.extractor.service import ExtractDocumentService
+from src.actor.extractor.service import ExtractDocumentService
 from dotenv import load_dotenv
-from src.extractor.document_extractor import DoclingPDFExtractor
+from src.actor.extractor.document_extractor import DoclingPDFExtractor
 
 
 load_dotenv(override=True)

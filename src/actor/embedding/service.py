@@ -5,7 +5,7 @@ import json
 import aiofiles
 from src.shared.schema import Document, DocumentChunk
 from src.shared.embedding_model import EmbeddingModel
-from src.embedding.repository import DocumentRepository
+from src.actor.embedding.repository import DocumentRepository
 
 
 class EmbeddingDocumentService:

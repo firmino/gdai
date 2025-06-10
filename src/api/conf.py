@@ -1,7 +1,7 @@
 import os
 import logging
 from dotenv import load_dotenv
-from pathlib import Path
+
 
 load_dotenv(override=True)
 logger = logging.getLogger("CONFIG_EXTRACTOR")

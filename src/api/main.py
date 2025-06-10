@@ -1,15 +1,10 @@
-import logging
-from fastapi import FastAPI
 import uvicorn
+from fastapi import FastAPI
 from src.api.router import router as search_router
 from src.shared.conf import Config
+from src.shared.logger import logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger("MAIN_APP")
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -31,15 +26,10 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-if __name__ == "__main__":
-    # Validate configuration before starting
-    if not Config.validate():
-        logger.error("Configuration validation failed. Exiting...")
-        exit(1)
-    
+if __name__ == "__main__": 
     # Run the application
     uvicorn.run(
-        "src.main:app", 
+        "src.api.main:app", 
         host="0.0.0.0", 
         port=8000,   
         reload=True,

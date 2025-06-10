@@ -92,67 +92,7 @@ class SearchRepository:
             logger.error(f"Error fetching chunks by vector similarity: {e}")
             raise
 
-    async def insert_result_token(self, message_id, token_number:int, token_txt: str) -> None:
-        """Insert a token associated with a specific query ID into the database.
-        Args:
-            message_id (str): The ID of the message associated with the query.
-            query_id (str): The ID of the query for which the token is being
-            token (str): The token to be inserted.
-        """     
-        try:
-            async with PGVectorDatabase.get_connection() as conn:
-                query = """
-                    INSERT INTO token (fk_message_id, token_number, token_text)
-                    VALUES ($1, $2, $3)
-                """
-                await conn.execute(query, message_id, token_number, token_txt)
-                logger.info(f"Inserted token for message ID: {message_id}")
-        except Exception as e:
-            logger.error(f"Error inserting token for message ID {message_id}: {e}")
-            raise
-
-
-    async def get_tokens_by_message_id(self, message_id: str) -> List[str]:
-        """
-        Retrieve all tokens associated with a specific message ID.
-
-        Args:
-            message_id (str): The ID of the message for which to retrieve tokens.
-
-        Returns:
-            List[str]: A list of tokens associated with the message ID.
-        """
-        try:
-            async with PGVectorDatabase.get_connection() as conn:
-                query = """SELECT token_text 
-                           FROM token 
-                           WHERE fk_message_id = $1 
-                           ORDER BY token_number"""
-                rows = await conn.fetch(query, message_id)
-                tokens = [row["token_text"] for row in rows]
-                logger.info(f"Retrieved {len(tokens)} tokens for message ID: {message_id}")
-                return tokens
-        except Exception as e:
-            logger.error(f"Error retrieving tokens for message ID {message_id}: {e}")
-            raise
-
-
-    async def clear_tokens_from_message_id(self, message_id: str) -> None:
-        """
-        Clear all tokens associated with a specific message ID.
-
-        Args:
-            message_id (str): The ID of the message for which to clear tokens.
-        """
-        try:
-            async with PGVectorDatabase.get_connection() as conn:
-                query = "DELETE FROM token WHERE fk_message_id = $1"
-                await conn.execute(query, message_id)
-                logger.info(f"Cleared tokens for message ID: {message_id}")
-        except Exception as e:
-            logger.error(f"Error clearing tokens for message ID {message_id}: {e}")
-            raise
-
+  
 
     async def update_message_status(self, message_id: str, status: str) -> None:
         """

@@ -1,7 +1,7 @@
 import os
 import pytest
 from dotenv import load_dotenv
-from src.embedding.exceptions import InvalidAPIKeyException
+from src.actor.embedding.exceptions import InvalidAPIKeyException
 from src.shared.embedding_model import CohereEmbeddingModel
 
 

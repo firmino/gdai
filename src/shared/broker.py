@@ -1,15 +1,12 @@
-
-import logging
 import dramatiq
 from dramatiq.brokers.rabbitmq import RabbitmqBroker
 from src.shared.conf import Config
-
-logger = logging.getLogger("DRAMATIQ_BROKER")
+from src.shared.logger import logger
 
 def _get_broker_url():
     """Gets the broker URL from environment variables """
-    url = f"amqp://{Config.RABBIT_MQ_USER}:{Config.RABBIT_MQ_PASSWORD}@{Config.RABBIT_MQ_HOST}:{Config.RABBIT_MQ_PORT}/%2f"
-    logger.info(f"Connecting to RabbitMQ broker at: {Config.RABBIT_MQ_HOST}:{Config.RABBIT_MQ_PORT}")
+    url = f"amqp://{Config.broker.RABBIT_MQ_USER}:{Config.broker.RABBIT_MQ_PASSWORD}@{Config.broker.RABBIT_MQ_HOST}:{Config.broker.RABBIT_MQ_PORT}/%2f"
+    logger.info(f"Connecting to RabbitMQ broker at: {Config.broker.RABBIT_MQ_HOST}:{Config.broker.RABBIT_MQ_PORT}")
     return url
 
 try:

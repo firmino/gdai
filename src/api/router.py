@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, status
@@ -8,8 +7,7 @@ from src.api.service import SearchService
 from src.api.repository import SearchRepository
 from src.shared.embedding_model import EmbeddingModelFactory
 from src.shared.llm_model import LLMModelFactory
-
-logger = logging.getLogger("API_ROUTER")
+from src.shared.logger import logger
 
 
 # Define request and response models

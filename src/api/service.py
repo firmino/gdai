@@ -2,7 +2,7 @@ import asyncio
 import logging
 from src.shared.embedding_model import EmbeddingModelFactory
 from src.shared.llm_model import LLMModelFactory, LLMModel
-from src.search.repository import SearchRepository
+from src.api.repository import SearchRepository
 
 
 logger = logging.getLogger("SEARCH_SERVICE")
@@ -73,7 +73,7 @@ class SearchService:
         await self.repository.update_message_status(message_id, "failed")
         return 
 
-    async def _process_llm_stream(self, message_id: str, prompt: str) -> None:
+    async def _process_llm_stream(self, message_id: str, prompt: str) -> str:
         """
         Process the streaming response from the LLM and store tokens.
         
@@ -81,10 +81,11 @@ class SearchService:
             message_id: The ID of the message.
             prompt: The prompt to send to the LLM.
         """
-        token_number = 0
+        msg_result = ""
         async for token in self.llm_model.call_llm_stream(prompt):
-            await self.repository.insert_result_token(message_id, token_number, token)
-            token_number += 1
+            msg_result += token
+        return msg_result
+
 
 
     async def _generate_answer(self, message_id: str, query: str, chunks_result) -> str:
@@ -109,17 +110,11 @@ class SearchService:
         )
         
         # Get streaming response from LLM and store tokens
-        await self._process_llm_stream(message_id, prompt)
-        
-        # Assemble complete answer from stored tokens
-        tokens_result = await self.repository.get_tokens_by_message_id(message_id)
-        answer_text = "".join([token for token in tokens_result])
+        answer_text = await self._process_llm_stream(message_id, prompt)
+          
         # Update message with final answer
         await self.repository.update_message_text_and_status(message_id, answer_text)
-        
-        # Clean up temporary tokens
-        await self.repository.clear_tokens_from_message_id(message_id)
-        
+          
         return answer_text
 
 
@@ -131,22 +126,12 @@ class SearchService:
         message_id = await self.repository.create_message_entry(tenant_id, query_id, query)
         try:
             # retrieve the chunks from the database based on the query
-            print(f"CHUNKS LIMIT: {chunks_limit}")
             chunks_result = await self._retrieve_relevant_chunks(tenant_id, query_id, query, chunks_limit)
 
             if not chunks_result:  # ??????? if nothing is found is it a error or just no results? avoid answer something out of the rag
                 await self._handle_no_results(message_id)
                 return 
-            print(f"TOTAL CHUNKS FOUND: {len(chunks_result)}")
             answer_text = await self._generate_answer(message_id, query, chunks_result)
-            
-            print(f"ANSWER GENERATED: {answer_text}")
-            print(f"type of answer_text: {type(answer_text)}")
-            #logger.info(f"Generated answer for query '{query}' with ID '{query_id}': {answer_text}")
-            # update the message status to completed
-
-            # add chunks used to the message
-            #await self.repository.add_chunks_to_message(message_id, chunks_result)
             return answer_text
         except Exception as e:
             await self.repository.update_message_status(message_id, "failed")
