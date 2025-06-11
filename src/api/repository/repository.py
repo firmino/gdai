@@ -1,12 +1,9 @@
-"""Repository for managing documents and chunks in PostgreSQL with pgvector."""
-
 from src.shared.database import PGVectorDatabase
 from src.shared.schema import DocumentChunk, ChunkQueryResult
 from typing import List
 import logging
 
 logger = logging.getLogger("SEARCH_REPOSITORY")
-
 
 class SearchRepository:
     """
@@ -97,8 +94,6 @@ class SearchRepository:
             logger.error(f"Error fetching chunks by vector similarity: {e}")
             raise
 
-  
-
     async def update_message_status(self, message_id: str, status: str) -> None:
         """
         Update the status of a message.
@@ -118,7 +113,6 @@ class SearchRepository:
             logger.error(f"Error updating message status for {message_id}: {e}")
             raise
 
-    
     async def update_message_text_and_status(self, message_id: str, text: str) -> None:
         """
         Update the text and status of a message.
@@ -141,7 +135,7 @@ class SearchRepository:
         except Exception as e:
             logger.error(f"Error updating message text for {message_id}: {e}")
             raise
-    
+
     async def add_chunks_to_message(self, message_id: str, chunks: List[ChunkQueryResult]) -> None:
         """
         Add chunks to a message.

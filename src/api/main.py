@@ -4,7 +4,6 @@ from src.api.routers.search import router as search_router
 from src.api.routers.document import router as document_router
 
 
-
 # Create FastAPI app
 app = FastAPI(
     title="G-DAI Search API",

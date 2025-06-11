@@ -4,19 +4,10 @@ Document upload endpoints router.
 import os
 import shutil
 from fastapi import APIRouter, HTTPException, BackgroundTasks, status, UploadFile, File, Form
-from pydantic import BaseModel
+from src.api.models.document import DocumentUploadResponse
 from src.actor.extractor.actor import document_extractor
 from src.shared.logger import logger
 from src.shared.conf import ExtractorConfig
-
-class DocumentUploadResponse(BaseModel):
-    """
-    Response model for document upload endpoint.
-    """
-    message: str
-    document_name: str
-    tenant_id: str
-    status: str
 
 router = APIRouter(prefix="/document", tags=["document"])
 

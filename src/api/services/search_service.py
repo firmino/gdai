@@ -1,10 +1,10 @@
+# The SearchService class has been moved to src/api/services/search_service.py
+
 import logging
 from src.shared.llm_model import LLMModel
 
 
 logger = logging.getLogger("SEARCH_SERVICE")
-
-
 
 class SearchService:
     """
