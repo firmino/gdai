@@ -98,16 +98,146 @@ The services defined in the `docker-compose.yml` file combine to provide a full-
 
 ---
 
-## 4. Summary
+## 4. Configuration
 
-GDAI leverages a modern set of technologies orchestrated via Docker Compose:
+### Environment Variables (.env)
+The application uses a `.env` file for configuration. Below are the main keys you must set:
 
-- **Weaviate** handles semantic search.
-- **Supertokens** provides authentication services.
-- **Postgres** maintains the backend database.
-- **FastAPI app** serves as the core API.
-- **Nginx** secures and routes external web traffic in production.
+```
+GDAI_LOG_LEVEL=DEBUG
+GDAI_LOG_FORMAT=[%(asctime)s] [GDAI] [%(levelname)s]: %(message)s
+GDAI_LOG_FILE_ENABLED=false
+GDAI_LOG_FILE_PATH=/home/fabricio/projects/g-dai/logs/gdai.log
+GDAI_LOG_FILE_MAX_SIZE_MB=10
+GDAI_LOG_FILE_BACKUP_COUNT=5
 
-This setup allows developers to quickly start the environment with minimal configuration while ensuring a scalable infrastructure appropriate for production deployments.
+RABBIT_MQ_HOST=localhost
+RABBIT_MQ_PORT=5672
+RABBIT_MQ_USER=rabbitmq
+RABBIT_MQ_PASSWORD=rabbitmq
+
+PGVECTOR_USER=testuser
+PGVECTOR_PASSWORD=testpwd
+PGVECTOR_DATABASE=vectordb
+PGVECTOR_HOST=localhost
+PGVECTOR_PORT=5555
+PGVECTOR_MIN_POOL_CONNECTIONS=2
+PGVECTOR_MAX_POOL_CONNECTIONS=10
+
+DOCUMENT_EXTRACTOR_FOLDER_SOURCE_PATH=/home/fabricio/projects/g-dai/DOC_FOLDER/raw
+DOCUMENT_EXTRACTOR_FOLDER_TARGET_PATH=/home/fabricio/projects/g-dai/DOC_FOLDER/extracted
+DOCUMENT_EXTRACTOR_MAX_FILE_SIZE_MB=100
+DOCUMENT_EXTRACTOR=docling
+DOCUMENT_EXTRACTOR_MAX_RETRIES=3
+DOCUMENT_EXTRACTOR_RETRY_DELAY=5
+DOCUMENT_EXTRACTOR_QUEUE=extract_data
+
+EMBEDDING_FOLDER_SOURCE_PATH=/home/fabricio/projects/g-dai/DOC_FOLDER/extracted
+EMBEDDING_CHUNK_SIZE=1000
+EMBEDDING_CHUNK_OVERLAP=10
+EMBEDDING_MAX_RETRIES=3
+EMBEDDING_RETRY_DELAY=5
+EMBEDDING_QUEUE=embedding_documents
+EMBEDDING_MAX_MEMORY_USAGE_PERCENT=90
+EMBEDDING_MODEL=cohere/embed-v4.0
+EMBEDDING_API_KEY=your-cohere-api-key
+
+SEARCH_LLM_MODEL=openai/gpt-4o
+SEARCH_LLM_API_KEY=your-openai-api-key
+SEARCH_LLM_MAX_TOKENS=1000
+SEARCH_LLM_TEMPERATURE=0.7
+```
+
+> **Note:** Replace `your-cohere-api-key` and `your-openai-api-key` with your actual API keys.
+
+---
+
+## 5. Deployment & Running
+
+### Local Development
+
+1. **Install Docker and Docker Compose** (if not already installed).
+2. **Clone the repository** and copy `.env.example` to `.env`, then fill in the required values.
+3. **Start all services:**
+   ```bash
+   docker-compose up --build
+   ```
+   Or in detached mode:
+   ```bash
+   docker-compose up -d
+   ```
+4. **Access the API:**
+   - By default, the FastAPI app will be available at `http://localhost:8000`.
+
+### Production
+- Configure Nginx and SSL as described above.
+- Ensure all environment variables are set securely.
+- Use a process manager (e.g., systemd, Docker Compose in production mode).
+
+---
+
+## 6. API Usage
+
+### Search Query Endpoint
+- **POST** `/search/query`
+- **Request Body:**
+  ```json
+  {
+    "tenant_id": "string",
+    "query_id": "string",
+    "query_text": "string",
+    "chunks_limit": 100
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "message": "string",
+    "query_id": "string",
+    "status": "success",
+    "list_chunks": [ ... ]
+  }
+  ```
+
+### Document Upload Endpoint
+- **POST** `/search/document/upload`
+- **Form Data:**
+  - `tenant_id`: string
+  - `document`: file (PDF, etc)
+- **Response:**
+  ```json
+  {
+    "message": "Document <filename> uploaded and queued for processing",
+    "document_name": "<filename>",
+    "tenant_id": "<tenant_id>",
+    "status": "pending"
+  }
+  ```
+
+---
+
+## 7. How to Use
+
+- **Upload a document** via `/search/document/upload` (multipart form-data).
+- **Submit a search query** via `/search/query` (JSON body).
+- Results will be based on the processed documents for the given tenant.
+
+---
+
+## 8. Troubleshooting
+- Check logs for errors: `docker-compose logs` or check the log file if enabled.
+- Ensure all environment variables are set and valid.
+- For database or broker issues, verify service health and credentials.
+
+---
+
+## 9. Contributing
+- Fork the repository, create a feature branch, and submit a pull request.
+- Please document new endpoints and configuration options.
+
+---
+
+## 10. License
+- See [LICENSE](LICENSE) for details.
 
 Happy coding!

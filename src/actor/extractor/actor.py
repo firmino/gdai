@@ -4,7 +4,7 @@ import json
 import shutil
 from src.shared.broker import dramatiq  # with broked configured
 from src.actor.extractor.service import ExtractDocumentService
-from src.actor.extractor.document_extractor import DoclingPDFExtractor, PyMuPDFExtractor
+from src.actor.extractor.document_extractor import PyMuPDFExtractor
 from src.actor.embedding.actor import embedding_document
 from src.shared.conf import Config
 from src.shared.logger import logger  
@@ -17,6 +17,15 @@ service = ExtractDocumentService(doc_extractor)
 
 @dramatiq.actor(queue_name=Config.extractor.QUEUE, max_retries=Config.extractor.MAX_RETRIES, min_backoff=Config.extractor.RETRY_DELAY)
 def document_extractor(document_data: dict):
+    """
+    Dramatiq actor for extracting document data.
+    Receives document metadata, validates and processes the file, extracts content, saves the result, and triggers embedding.
+
+    Args:
+        document_data (dict): Dictionary with 'document_name' and 'tenant_id'.
+    Raises:
+        ValueError, FileNotFoundError, PermissionError, IOError: On various file and processing errors.
+    """
     try:
         logger.info(f"Received document data: {document_data}")
         document_name = document_data.get("document_name")

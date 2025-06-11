@@ -67,6 +67,15 @@ class CohereEmbeddingModel(EmbeddingModel):
 
     @staticmethod
     async def create(api_key: str) -> "CohereEmbeddingModel":
+        """
+        Create a CohereEmbeddingModel instance with the provided API key.
+
+        Args:
+            api_key (str): The API key for Cohere.
+
+        Returns:
+            CohereEmbeddingModel: The created embedding model instance.
+        """
         embedding_model = CohereEmbeddingModel()
         embedding_model.api_key = api_key
         embedding_model.cohere = cohere.AsyncClient(api_key=api_key)

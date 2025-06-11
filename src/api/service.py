@@ -1,8 +1,5 @@
-import asyncio
 import logging
-from src.shared.embedding_model import EmbeddingModelFactory
-from src.shared.llm_model import LLMModelFactory, LLMModel
-from src.api.repository import SearchRepository
+from src.shared.llm_model import LLMModel
 
 
 logger = logging.getLogger("SEARCH_SERVICE")
@@ -10,6 +7,9 @@ logger = logging.getLogger("SEARCH_SERVICE")
 
 
 class SearchService:
+    """
+    Service for handling search queries using LLM and embeddings.
+    """
     __PROMPT_TEMPLATE_TO_SOLVE_QUERY = """
         You are an AI assistant that helps users find relevant information in documents. 
         You will receive a query and a list of document chunks. Your task is to:
@@ -33,7 +33,14 @@ class SearchService:
     """
 
     def __init__(self, llm_model: LLMModel, embedding_model, repository):
-        """Initialize the SearchService."""
+        """
+        Initialize the SearchService.
+
+        Args:
+            llm_model (LLMModel): The language model to use for answering queries.
+            embedding_model: The embedding model for vector search.
+            repository: The repository for database access.
+        """
         self.llm_model = llm_model
         self.embedding_model = embedding_model
         self.repository = repository
@@ -45,7 +52,7 @@ class SearchService:
         Args:
             tenant_id (str): The ID of the tenant.
             query_id (str): The ID of the query.
-            embedded_query (list[float]): The embedding vector of the query.
+            query (str): The query text.
             chunks_limit (int): The maximum number of chunks to retrieve.
         Returns:
             List[ChunkQueryResult]: A list of document chunks sorted by similarity.
@@ -63,12 +70,11 @@ class SearchService:
     async def _handle_no_results(self, message_id: str):
         """
         Handle the case when no relevant chunks are found.
-        
+
         Args:
-            message_id: The ID of the message.
-            
+            message_id (str): The ID of the message.
         Returns:
-            Dict with query results including status.
+            None
         """
         await self.repository.update_message_status(message_id, "failed")
         return 
@@ -76,10 +82,12 @@ class SearchService:
     async def _process_llm_stream(self, message_id: str, prompt: str) -> str:
         """
         Process the streaming response from the LLM and store tokens.
-        
+
         Args:
-            message_id: The ID of the message.
-            prompt: The prompt to send to the LLM.
+            message_id (str): The ID of the message.
+            prompt (str): The prompt to send to the LLM.
+        Returns:
+            str: The full answer text from the LLM.
         """
         msg_result = ""
         async for token in self.llm_model.call_llm_stream(prompt):
@@ -91,14 +99,13 @@ class SearchService:
     async def _generate_answer(self, message_id: str, query: str, chunks_result) -> dict:
         """
         Generate an answer using the LLM based on the query and relevant chunks.
-        
+
         Args:
-            message_id: The ID of the message.
-            query: The query text.
+            message_id (str): The ID of the message.
+            query (str): The query text.
             chunks_result: The relevant document chunks.
-            
         Returns:
-            The generated answer.
+            dict: The generated answer and used chunks.
         """
         # Format chunks for the prompt
         chunks_text = "\n\n".join([chunk_res.chunk.chunk_text for chunk_res in chunks_result])
@@ -125,7 +132,15 @@ class SearchService:
 
     async def answer_query(self, tenant_id: str, query_id: str, query: str, chunks_limit: int = 3) -> str:
         """
-        Answer a query by searching for relevant documents.
+        Answer a query by searching for relevant documents and generating a response.
+
+        Args:
+            tenant_id (str): The ID of the tenant.
+            query_id (str): The ID of the query.
+            query (str): The query text.
+            chunks_limit (int): The maximum number of chunks to use.
+        Returns:
+            str: The answer to the query.
         """
         # create in table message a new message with the query with status pending
         message_id = await self.repository.create_message_entry(tenant_id, query_id, query)

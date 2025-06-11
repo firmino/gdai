@@ -1,8 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
-from src.api.router import router as search_router
-from src.shared.conf import Config
-from src.shared.logger import logger
+from src.api.routers.search import router as search_router
+from src.api.routers.document import router as document_router
 
 
 
@@ -13,8 +12,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Include the search router
+# Include the search and document routers
 app.include_router(search_router)
+app.include_router(document_router)
 
 # Default route
 @app.get("/")

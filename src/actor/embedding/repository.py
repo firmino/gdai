@@ -2,19 +2,28 @@
 
 from src.shared.database import PGVectorDatabase
 from src.shared.schema import Document, DocumentChunk
-from typing import List
 from src.shared.logger import logger
 
 
 
 class DocumentRepository:
-    """Manages documents and chunks in a PostgreSQL database with pgvector."""
-
+    """
+    Manages documents and chunks in a PostgreSQL database with pgvector.
+    """
     def __init__(self):
-        """Initialize repository."""
+        """
+        Initialize repository.
+        """
 
-    async def get_document_by_id(self, document_id: str) -> Document:
-        """Get document by ID."""
+    async def get_document_by_id(self, document_id: str):
+        """
+        Get document by ID.
+
+        Args:
+            document_id (str): The ID of the document.
+        Returns:
+            Document: The document object or None if not found.
+        """
         async with PGVectorDatabase.get_connection() as connection:
             result = await connection.fetchrow(
                 """SELECT id, 
@@ -31,8 +40,15 @@ class DocumentRepository:
             doc = Document(doc_id=result["id"], tenant_id=result["tenant_id"], doc_name=result["name"], pages=result["pages"], embedding_model_name=result["embedding_model_name"])
             return doc
 
-    async def get_document_chunk_by_id(self, chunk_id: str) -> DocumentChunk:
-        """Get document chunk by ID."""
+    async def get_document_chunk_by_id(self, chunk_id: str):
+        """
+        Get document chunk by ID.
+
+        Args:
+            chunk_id (str): The ID of the chunk.
+        Returns:
+            DocumentChunk: The document chunk object or None if not found.
+        """
         async with PGVectorDatabase.get_connection() as connection:
             result = await connection.fetchrow(
                 """SELECT id, 
@@ -62,8 +78,16 @@ class DocumentRepository:
             )
         return doc_chunk
 
-    async def insert_document(self, document: Document, document_chunks: List[DocumentChunk]):
-        """Insert document and chunks into database."""
+    async def insert_document(self, document, document_chunks):
+        """
+        Insert document and chunks into database.
+
+        Args:
+            document (Document): The document to insert.
+            document_chunks (List[DocumentChunk]): The chunks to insert.
+        Returns:
+            None
+        """
         try:
             async with PGVectorDatabase.get_connection() as connection:
                 async with connection.transaction(): 
