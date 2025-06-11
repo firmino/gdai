@@ -15,6 +15,7 @@ import os
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -34,7 +35,7 @@ if GDAI_LOG_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
     raise ValueError(f"Invalid GDAI_LOG_LEVEL: {GDAI_LOG_LEVEL}. Must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL.")
 
 # Get log format from environment or use default
-GDAI_LOG_FORMAT = os.getenv("GDAI_LOG_FORMAT", "[%(asctime)s] [GDAI]  [%(levelname)s]: %(message)s")
+GDAI_LOG_FORMAT = os.getenv("GDAI_LOG_FORMAT", "[%(asctime)s] [GDAI] [%(module_path)s] [%(levelname)s]: %(message)s")
 GDAI_LOG_FILE_ENABLED = os.getenv("GDAI_LOG_FILE_ENABLED", "false").lower() == "true"
 
 gdai_logger = logging.getLogger("GDAI")

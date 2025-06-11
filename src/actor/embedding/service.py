@@ -6,6 +6,7 @@ import aiofiles
 from src.shared.schema import Document, DocumentChunk
 from src.shared.embedding_model import EmbeddingModel
 from src.actor.embedding.repository import DocumentRepository
+from src.shared.logger import logger
 
 
 class EmbeddingDocumentService:
@@ -24,6 +25,7 @@ class EmbeddingDocumentService:
         """Process document: load, chunk, embed, and store in repository."""
         document = await self._load_document(document_path)
         document_chunks = await self._chunk_document(document)
+        logger.info(f"Document {document.doc_name} has {len(document_chunks)} chunks after processing.")
         await self._embed_chunks(document_chunks, self.embedding_model)
         await self.repository.insert_document(document, document_chunks)
 
@@ -104,7 +106,6 @@ class EmbeddingDocumentService:
     async def _embed_chunks(self, chunks: list[DocumentChunk], embedding_model: EmbeddingModel) -> None:
         """Generate embeddings for text chunks using the provided model."""
 
-        print(f"TOTAL CHUNKS TO EMBED: {len(chunks)}")
         batch_size = 64
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]

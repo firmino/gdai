@@ -5,14 +5,12 @@ import asyncio
 import psutil
 from time import time
 from src.shared.broker import dramatiq  # with configured broked
-#from src.actor.embedding.conf import Config
 from src.actor.embedding.repository import DocumentRepository
 from src.actor.embedding.service import EmbeddingDocumentService
 from src.shared.embedding_model import EmbeddingModelFactory
 from src.shared.conf import Config
+from src.shared.logger import logger
 
-
-logger = logging.getLogger("ACTOR_EMBEDDING")
 
 try:
     document_repository = DocumentRepository()
@@ -31,6 +29,7 @@ except Exception as e:
 
 @dramatiq.actor(queue_name=Config.embedding.QUEUE, max_retries=Config.embedding.MAX_RETRIES, min_backoff=Config.embedding.RETRY_DELAY)
 def embedding_document(message_data: dict):
+    
     start_time = time()
     try:
         # Validate that the incoming message is a dictionary

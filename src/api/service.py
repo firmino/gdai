@@ -88,7 +88,7 @@ class SearchService:
 
 
 
-    async def _generate_answer(self, message_id: str, query: str, chunks_result) -> str:
+    async def _generate_answer(self, message_id: str, query: str, chunks_result) -> dict:
         """
         Generate an answer using the LLM based on the query and relevant chunks.
         
@@ -114,8 +114,13 @@ class SearchService:
           
         # Update message with final answer
         await self.repository.update_message_text_and_status(message_id, answer_text)
-          
-        return answer_text
+
+        if answer_text is None or  "There is no relevant information" in answer_text:
+            await self._handle_no_results(message_id)
+            return {"msg": "There is no relevant information available.", "chunks": []}
+        
+        chunks_used = [{"document": chunk.chunk.doc_name, "tenant_id": chunk.chunk.tenant_id, "chunk_id": chunk.chunk.chunk_id, "text":chunk.chunk.chunk_text, "page_number": chunk.chunk.page_number } for chunk in chunks_result]
+        return {"msg": answer_text, "chunks": chunks_used}
 
 
     async def answer_query(self, tenant_id: str, query_id: str, query: str, chunks_limit: int = 3) -> str:
@@ -130,9 +135,11 @@ class SearchService:
 
             if not chunks_result:  # ??????? if nothing is found is it a error or just no results? avoid answer something out of the rag
                 await self._handle_no_results(message_id)
-                return 
-            answer_text = await self._generate_answer(message_id, query, chunks_result)
-            return answer_text
+                return {"msg": "There is no relevant information available.", "chunks": []} 
+            
+            answer = await self._generate_answer(message_id, query, chunks_result)
+            
+            return answer
         except Exception as e:
             await self.repository.update_message_status(message_id, "failed")
             raise e
