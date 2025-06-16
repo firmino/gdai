@@ -1,14 +1,5 @@
 site_name: GDAI
 
-extra_css:
-  - docs/assets/css/bootstrap.min.css
-  - docs/assets/css/bootstrap.min.css.map
-  - docs/assets/css/darcula-highlight.min.css
-  - dracula-ui.css.map
-  - dracula-ui.min.css
-  - mkdocs.min.css
-
-
 nav:
   - Home: index.md
   - Contributing: contributing.md
