@@ -2,7 +2,7 @@
 
 GDAI is a containerized, AI-powered application that leverages a set of specialized services to provide semantic search, secure user authentication, and a scalable API. The application uses Docker Compose for local development and production deployment, ensuring all services work together seamlessly.
 
-## 1. Getting Started TESTE
+## 1. Getting Started
 
 ### Running the Application
 
