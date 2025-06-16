@@ -166,7 +166,52 @@
             <!-- block content -->
                 <section class="p-md-5 section-content">
     <article>
-        <p></p>
+        <p><h1 id="contributing-to-g-dai">Contributing to G-DAI</h1>
+<p>We welcome contributions from the community! Please follow these guidelines to help us maintain a high-quality project.</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="installation">Installation</h3>
+<ol>
+<li>Clone the repository:
+   <code>bash
+   git clone https://github.com/your-org/g-dai.git
+   cd g-dai</code></li>
+<li>Install dependencies:
+   <code>bash
+   pip install -r requirements.txt</code>
+   Or use Docker Compose:
+   <code>bash
+   docker-compose up --build</code></li>
+</ol>
+<h3 id="usage">Usage</h3>
+<ul>
+<li>Run the API:
+  <code>bash
+  python -m src.api.main</code></li>
+<li>Ingest documents by placing them in <code>DOC_FOLDER/raw/</code> and using the provided scripts or API endpoints.</li>
+<li>Query the API for semantic search and auditable answers.</li>
+</ul>
+<h2 id="how-to-contribute">How to Contribute</h2>
+<ul>
+<li>Fork the repository and create your branch from <code>main</code>.</li>
+<li>Write clear, concise commit messages.</li>
+<li>Ensure your code passes linting and tests.</li>
+<li>Submit a pull request with a detailed description of your changes.</li>
+</ul>
+<h2 id="coding-standards">Coding Standards</h2>
+<ul>
+<li>Follow PEP8 and use Ruff for linting/formatting.</li>
+<li>Write tests for new features and bug fixes.</li>
+<li>Document your code and public APIs.</li>
+</ul>
+<h2 id="reporting-issues">Reporting Issues</h2>
+<ul>
+<li>Use GitHub Issues to report bugs or request features.</li>
+<li>Provide as much detail as possible, including steps to reproduce and expected behavior.</li>
+</ul>
+<h2 id="community">Community</h2>
+<ul>
+<li>Be respectful and follow our <a href="../code_of_conduct/">Code of Conduct</a>.</li>
+</ul></p>
     </article>
 </section>
             <!-- endblock -->
