@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+        <title>GDAI</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <meta name="description" content="None">
+        
+        
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="assets/css/darcula-highlight.min.css">
+
+        <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+        <link rel="stylesheet" href="assets/css/dracula-ui.min.css">
+        <link rel="stylesheet" href="assets/css/mkdocs.min.css">
+
+        
+            <link  rel="icon" type="image/x-icon" href="assets/img/favicon.ico">
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+                <script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+
+<body class="drac-bg-black-secondary drac-text-grey-ternary drac-text drac-scrollbar-purple">
+
+    <main class="d-flex">
+
+        <!-- block sidebar -->
+            <nav id="sidebar" class="sidebar drac-bg-black">
+    <div class="custom-menu">
+        <button type="button" id="sidebarCollapse" class="btn btn-primary">
+            <i class="fa fa-bars"></i>
+            <span class="sr-only">Menu</span>
+        </button>
+    </div>
+
+    <div class="p-4">
+        
+
+        <div class="drac-text-center">
+            
+                <span class="drac-text drac-line-height drac-text-white">GDAI</span>
+            
+        </div>
+
+        <div class="drac-box flex-column">
+            <ul class="dot-ul">
+                <li><div class="dot-li drac-bg-cyan"></div></li>
+                <li><div class="dot-li drac-bg-green"></div></li>
+                <li><div class="dot-li drac-bg-orange"></div></li>
+                <li><div class="dot-li drac-bg-pink"></div></li>
+                <li><div class="dot-li drac-bg-purple"></div></li>
+                <li><div class="dot-li drac-bg-red"></div></li>
+                <li><div class="dot-li drac-bg-yellow"></div></li>
+            </ul>
+        </div>
+
+        <hr class="drac-divider" />
+
+        <!-- block menu -->
+        <ul class="mb-5 drac-list drac-list-none">
+            
+            <li class="drac-box">
+                <a href="."
+                    class=" active 
+                    drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+                    Home
+                </a>
+            </li>
+            <li class="drac-box">
+                <a href="contributing/"
+                    class="
+                    drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+                    Contributing
+                </a>
+            </li>
+            <li class="drac-box">
+                <a href="code_of_conduct/"
+                    class="
+                    drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+                    Code of Conduct
+                </a>
+            </li>
+            <li class="drac-box">
+                <a href="about/"
+                    class="
+                    drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+                    About
+                </a>
+            </li>
+        </ul>
+        <!-- endblock -->
+    </div>
+</nav>
+        <!-- endblock -->
+
+        <nav class="divider drac-bg-purple-cyan"></nav>
+
+        <div class="content">
+            <!-- block header -->
+                <header>
+    <nav class="navbar navbar-expand-xl drac-bg-purple">
+        <div class="container-fluid">
+            
+            <button class="navbar-toggler w-100 text-center" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsMenu"
+                aria-controls="navbarsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse flex-column ml-auto" id="navbarsMenu">
+                <ul class="navbar-nav text-md-center">
+
+                    <!-- block preview -->
+                    <li class="nav-item">
+                            
+        <div class="container">
+            <div class="row row-preview">
+                <div class="col">
+                    <a 
+                        class="btn-preview drac-btn drac-text-white--hover disabled">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="contributing/"
+                        class="btn-preview drac-btn drac-btn-outline drac-text-white drac-text-cyan-green--hover" style="padding-left: 3%;">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+                    </li>
+                    <!--  endblock -->
+
+                    <!-- block search -->
+                    <li class="nav-item"><div role="search" class="search-box">
+	<form id="rtd-search-form" class="wy-form" action="./search.html" method="get">
+		<input type="text" name="q" class="drac-input drac-input-search drac-input-white drac-text-white drac-bg-black-secondary"
+		placeholder="Search docs" title="Type search term here" />
+	</form>
+</div>
+                    </li>
+                    <!--  endblock -->
+
+                    <!-- block source -->
+                    <li class="nav-item">
+                        
+                    </li>
+                    <!--  endblock -->
+
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+</header>
+            <!-- endblock -->
+
+            <!-- block content -->
+                <section class="p-md-5 section-content">
+    <article>
+        <p><p><img src="/assets/logo.png" alt="Logo GDAI" width="200" /></p>
+<h1 id="gdai-generative-document-ai">GDAI - Generative Document AI</h1>
+<p>GDAI is a containerized, AI-powered application that leverages a set of specialized services to provide semantic search, secure user authentication, and a scalable API. The application uses Docker Compose for local development and production deployment, ensuring all services work together seamlessly.</p>
+<h2 id="1-getting-started">1. Getting Started</h2>
+<h3 id="running-the-application">Running the Application</h3>
+<p>To start all services defined in the project, simply run:</p>
+<pre><code class="language-bash">docker-compose up
+</code></pre>
+<p>For running the services in detached mode, use:</p>
+<pre><code class="language-bash">docker-compose up -d
+</code></pre>
+<h3 id="ssl-certificate-generation">SSL Certificate Generation</h3>
+<p>Before deploying into production, generate SSL certificates for your domains:</p>
+<pre><code class="language-bash">certbot certonly --standalone -d gdai.site -d www.gdai.site --email firminodefaria@gmail.com --agree-tos --non-interactive --config-dir ./certbot/config --work-dir ./certbot/work --logs-dir ./certbot/logs
+</code></pre>
+<p>Make sure ports 80 and 443 are available when running Certbot.</p>
+<hr />
+<h2 id="2-project-structure">2. Project Structure</h2>
+<pre><code class="language-bash">gdai/
+├── docker-compose.yml     # Docker Compose configuration
+├── .github/               # Github Actions configuration
+│── infra/                 # Infrastructure configuration files
+│── src/                   # Application
+│── Dockerfile.yml         # Dockerfile for project application
+│── pyproject.yml          # python project configuration
+│── uv.lock                # uv.lock file for project
+└── README.md              # Project documentation
+</code></pre>
+<p><em>Note: Additional configuration files (e.g., for Nginx or Certbot) may be provided in external folders or through mounted volumes.</em></p>
+<hr />
+<h2 id="3-services-infrastructure">3. Services Infrastructure</h2>
+<p>The services defined in the <code>docker-compose.yml</code> file combine to provide a full-featured environment for GDAI. Below is an explanation of each service:</p>
+<h3 id="weaviate">Weaviate</h3>
+<ul>
+<li><strong>Image:</strong> <code>semitechnologies/weaviate:latest</code></li>
+<li><strong>Purpose:</strong> Provides a vector search engine for semantic similarity searches.</li>
+<li><strong>Configuration:</strong></li>
+<li>Environment variables set options such as query defaults and anonymous access.</li>
+<li>Persists data with a named volume (<code>weaviate_data</code>).</li>
+<li>Exposes port 8080 internally and maps it for inter-service communication.</li>
+</ul>
+<h3 id="supertokens">Supertokens</h3>
+<ul>
+<li><strong>Image:</strong> <code>supertokens/supertokens-postgresql:latest</code></li>
+<li><strong>Purpose:</strong> Manages secure user authentication and session management.</li>
+<li><strong>Configuration:</strong></li>
+<li>Environment variables configure database connection details.</li>
+<li>It depends on the <code>postgres</code> service to operate.</li>
+<li>Exposes port 3567 for authentication API calls.</li>
+</ul>
+<h3 id="postgres">Postgres</h3>
+<ul>
+<li><strong>Image:</strong> <code>postgres:13-alpine</code></li>
+<li><strong>Purpose:</strong> Acts as the primary database service supporting both Supertokens and potentially other application data.</li>
+<li><strong>Configuration:</strong></li>
+<li>Environment variables define the database, user, and password.</li>
+<li>Persists data with a named volume (<code>postgres_data</code>).</li>
+</ul>
+<h3 id="fastapi-application-fastapi-app">FastAPI Application (fastapi-app)</h3>
+<ul>
+<li><strong>Container Name:</strong> <code>fastapi-app</code></li>
+<li><strong>Purpose:</strong> Runs the main API application built with FastAPI.</li>
+<li><strong>Configuration:</strong></li>
+<li>Built from the local Dockerfile.</li>
+<li>Exposes the application on port 8000.</li>
+<li>Sets environment variables to connect to the Weaviate and Supertokens services.</li>
+<li>Depends on both <code>weaviate</code> and <code>supertokens</code> to ensure proper startup order.</li>
+</ul>
+<h3 id="nginx">Nginx</h3>
+<ul>
+<li><strong>Image:</strong> <code>nginx:alpine</code></li>
+<li><strong>Purpose:</strong> Acts as a reverse proxy and TLS terminator in a production environment.</li>
+<li><strong>Configuration:</strong></li>
+<li>Maps host ports 80 and 443 to the container.</li>
+<li>Mounts configuration files (from <code>infra/nginx/gdai.conf</code>) and SSL certificates.</li>
+<li>Depends on the FastAPI application to start before routing traffic.</li>
+</ul>
+<hr />
+<h2 id="4-configuration">4. Configuration</h2>
+<h3 id="environment-variables-env">Environment Variables (.env)</h3>
+<p>The application uses a <code>.env</code> file for configuration. Below are the main keys you must set:</p>
+<pre><code>GDAI_LOG_LEVEL=DEBUG
+GDAI_LOG_FORMAT=[%(asctime)s] [GDAI] [%(levelname)s]: %(message)s
+GDAI_LOG_FILE_ENABLED=false
+GDAI_LOG_FILE_PATH=/home/fabricio/projects/g-dai/logs/gdai.log
+GDAI_LOG_FILE_MAX_SIZE_MB=10
+GDAI_LOG_FILE_BACKUP_COUNT=5
+
+RABBIT_MQ_HOST=localhost
+RABBIT_MQ_PORT=5672
+RABBIT_MQ_USER=rabbitmq
+RABBIT_MQ_PASSWORD=rabbitmq
+
+PGVECTOR_USER=testuser
+PGVECTOR_PASSWORD=testpwd
+PGVECTOR_DATABASE=vectordb
+PGVECTOR_HOST=localhost
+PGVECTOR_PORT=5555
+PGVECTOR_MIN_POOL_CONNECTIONS=2
+PGVECTOR_MAX_POOL_CONNECTIONS=10
+
+DOCUMENT_EXTRACTOR_FOLDER_SOURCE_PATH=/home/fabricio/projects/g-dai/DOC_FOLDER/raw
+DOCUMENT_EXTRACTOR_FOLDER_TARGET_PATH=/home/fabricio/projects/g-dai/DOC_FOLDER/extracted
+DOCUMENT_EXTRACTOR_MAX_FILE_SIZE_MB=100
+DOCUMENT_EXTRACTOR=docling
+DOCUMENT_EXTRACTOR_MAX_RETRIES=3
+DOCUMENT_EXTRACTOR_RETRY_DELAY=5
+DOCUMENT_EXTRACTOR_QUEUE=extract_data
+
+EMBEDDING_FOLDER_SOURCE_PATH=/home/fabricio/projects/g-dai/DOC_FOLDER/extracted
+EMBEDDING_CHUNK_SIZE=1000
+EMBEDDING_CHUNK_OVERLAP=10
+EMBEDDING_MAX_RETRIES=3
+EMBEDDING_RETRY_DELAY=5
+EMBEDDING_QUEUE=embedding_documents
+EMBEDDING_MAX_MEMORY_USAGE_PERCENT=90
+EMBEDDING_MODEL=cohere/embed-v4.0
+EMBEDDING_API_KEY=your-cohere-api-key
+
+SEARCH_LLM_MODEL=openai/gpt-4o
+SEARCH_LLM_API_KEY=your-openai-api-key
+SEARCH_LLM_MAX_TOKENS=1000
+SEARCH_LLM_TEMPERATURE=0.7
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> Replace <code>your-cohere-api-key</code> and <code>your-openai-api-key</code> with your actual API keys.</p>
+</blockquote>
+<hr />
+<h2 id="5-deployment-running">5. Deployment &amp; Running</h2>
+<h3 id="local-development">Local Development</h3>
+<ol>
+<li><strong>Install Docker and Docker Compose</strong> (if not already installed).</li>
+<li><strong>Clone the repository</strong> and copy <code>.env.example</code> to <code>.env</code>, then fill in the required values.</li>
+<li><strong>Start all services:</strong>
+   <code>bash
+   docker-compose up --build</code>
+   Or in detached mode:
+   <code>bash
+   docker-compose up -d</code></li>
+<li><strong>Access the API:</strong></li>
+<li>By default, the FastAPI app will be available at <code>http://localhost:8000</code>.</li>
+</ol>
+<h3 id="production">Production</h3>
+<ul>
+<li>Configure Nginx and SSL as described above.</li>
+<li>Ensure all environment variables are set securely.</li>
+<li>Use a process manager (e.g., systemd, Docker Compose in production mode).</li>
+</ul>
+<hr />
+<h2 id="6-api-usage">6. API Usage</h2>
+<h3 id="search-query-endpoint">Search Query Endpoint</h3>
+<ul>
+<li><strong>POST</strong> <code>/search/query</code></li>
+<li><strong>Request Body:</strong>
+  <code>json
+  {
+    "tenant_id": "string",
+    "query_id": "string",
+    "query_text": "string",
+    "chunks_limit": 100
+  }</code></li>
+<li><strong>Response:</strong>
+  <code>json
+  {
+    "message": "string",
+    "query_id": "string",
+    "status": "success",
+    "list_chunks": [ ... ]
+  }</code></li>
+</ul>
+<h3 id="document-upload-endpoint">Document Upload Endpoint</h3>
+<ul>
+<li><strong>POST</strong> <code>/search/document/upload</code></li>
+<li><strong>Form Data:</strong></li>
+<li><code>tenant_id</code>: string</li>
+<li><code>document</code>: file (PDF, etc)</li>
+<li><strong>Response:</strong>
+  <code>json
+  {
+    "message": "Document &lt;filename&gt; uploaded and queued for processing",
+    "document_name": "&lt;filename&gt;",
+    "tenant_id": "&lt;tenant_id&gt;",
+    "status": "pending"
+  }</code></li>
+</ul>
+<hr />
+<h2 id="7-how-to-use">7. How to Use</h2>
+<ul>
+<li><strong>Upload a document</strong> via <code>/search/document/upload</code> (multipart form-data).</li>
+<li><strong>Submit a search query</strong> via <code>/search/query</code> (JSON body).</li>
+<li>Results will be based on the processed documents for the given tenant.</li>
+</ul>
+<hr />
+<h2 id="8-troubleshooting">8. Troubleshooting</h2>
+<ul>
+<li>Check logs for errors: <code>docker-compose logs</code> or check the log file if enabled.</li>
+<li>Ensure all environment variables are set and valid.</li>
+<li>For database or broker issues, verify service health and credentials.</li>
+</ul>
+<hr />
+<h2 id="9-contributing">9. Contributing</h2>
+<ul>
+<li>Fork the repository, create a feature branch, and submit a pull request.</li>
+<li>Please document new endpoints and configuration options.</li>
+</ul>
+<hr />
+<h2 id="10-license">10. License</h2>
+<ul>
+<li>See <a href="LICENSE">LICENSE</a> for details.</li>
+</ul>
+<p>Happy coding!</p></p>
+    </article>
+</section>
+            <!-- endblock -->
+
+            <!-- block footer -->
+                <footer>
+    <div class="d-flex flex-sm-row justify-content-between py-2 border-top drac-text-black drac-bg-cyan-green">
+        <a href="https://github.com/dracula/mkdocs" target="_blank" style="padding-left: 1%;"
+            class="footer-text drac-anchor drac-text-black drac-text-purple--hover">
+            Made with Dracula Theme for MkDocs
+        </a>
+    </div>
+</footer>
+            <!-- endblock -->
+        </div>
+
+    </main>
+
+        <script>var base_url = '.';</script>
+        <script src="assets/js/jquery-3.3.1.slim.min.js"></script>
+        <script src="assets/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/js/mkdocs.js"></script>
+			<script src="search/main.js" defer></script>
+
+</body>
+
+</html>
