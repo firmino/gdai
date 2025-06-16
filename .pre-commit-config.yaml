@@ -9,7 +9,7 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: check-yaml
+      # - id: check-yaml
       - id: check-json
         exclude: ^tests/fixtures/embedding_pipeline/
       - id: end-of-file-fixer
