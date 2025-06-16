@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class InvalidDocumentPathFolderException(Exception):
     """
     Exception raised when the document path folder is invalid.

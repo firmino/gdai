@@ -1,6 +1,10 @@
-import cohere
+from __future__ import annotations
+
 import asyncio
 from abc import ABC, abstractmethod
+
+import cohere
+
 from src.shared.conf import Config
 
 
@@ -66,7 +70,7 @@ class CohereEmbeddingModel(EmbeddingModel):
         self.SEARCH_DOCUMENT_TYPE = "search_query"
 
     @staticmethod
-    async def create(api_key: str) -> "CohereEmbeddingModel":
+    async def create(api_key: str) -> CohereEmbeddingModel:
         """
         Create a CohereEmbeddingModel instance with the provided API key.
 
@@ -112,6 +116,7 @@ class CohereEmbeddingModel(EmbeddingModel):
         except Exception as e:
             raise Exception(f"Failed to generate embeddings for texts: {e}") from e
 
+
 class EmbeddingModelFactory:
     """
     A factory class to create instances of embedding models.
@@ -128,4 +133,6 @@ class EmbeddingModelFactory:
         if Config.ai.EMBEDDING_MODEL == "cohere/embed-v4.0":
             return await CohereEmbeddingModel.create(Config.ai.EMBEDDING_MODEL_API_KEY)
         else:
-            raise ValueError(f"Unsupported embedding model: {Config.ai.EMBEDDING_MODEL}")
+            raise ValueError(
+                f"Unsupported embedding model: {Config.ai.EMBEDDING_MODEL}"
+            )

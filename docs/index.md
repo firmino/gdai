@@ -1,3 +1,5 @@
+<img src="/assets/logo.png" alt="Logo GDAI" width="200" />
+
 # GDAI - Generative Document AI
 
 GDAI is a containerized, AI-powered application that leverages a set of specialized services to provide semantic search, secure user authentication, and a scalable API. The application uses Docker Compose for local development and production deployment, ensuring all services work together seamlessly.

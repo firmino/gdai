@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import os
 from abc import ABC, abstractmethod
 from collections import defaultdict
+
 import fitz  # PyMuPDF
-from docling.document_converter import DocumentConverter, InputFormat, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions
-from src.shared.schema import Table, Image, Text, Document
+from docling.document_converter import DocumentConverter, InputFormat, PdfFormatOption
+
+from src.shared.schema import Document, Image, Table, Text
 
 
 class DocumentExtractor(ABC):
@@ -39,15 +43,16 @@ class PyMuPDFExtractor(DocumentExtractor):
         # Get the name of the document from full path
         doc_name = self._get_document_name(document_path)
 
-
         try:
             # Open the PDF document
             pdf_document = fitz.open(document_path)
 
             # Extract data
-            dict_result = {"texts": self._extract_raw_text(pdf_document), 
-                           "tables": self._extract_raw_tables(pdf_document), 
-                           "pictures": self._extract_raw_images(pdf_document)}
+            dict_result = {
+                "texts": self._extract_raw_text(pdf_document),
+                "tables": self._extract_raw_tables(pdf_document),
+                "pictures": self._extract_raw_images(pdf_document),
+            }
 
             # Format the output to a Document object
             document = self._format_output(doc_name, dict_result)
@@ -58,7 +63,7 @@ class PyMuPDFExtractor(DocumentExtractor):
             return document
 
         except Exception as e:
-            print(f"Error extracting data from {doc_name}: {str(e)}")
+            print(f"Error extracting data from {doc_name}: {e!s}")
             raise
 
     def _get_document_name(self, document_path: str) -> str:
@@ -86,11 +91,17 @@ class PyMuPDFExtractor(DocumentExtractor):
 
             next_text_list_paragraphs = next_text.split("\n\n")
 
-            if next_text_list_paragraphs[0][0].isupper():  # if first character is uppercase
+            if next_text_list_paragraphs[0][
+                0
+            ].isupper():  # if first character is uppercase
                 next_text = "\n\n".join(next_text_list_paragraphs)
             else:
                 current_text += f"\n{next_text_list_paragraphs[0]}"
-                next_text = "\n\n".join(next_text_list_paragraphs[1:]) if len(next_text_list_paragraphs) > 1 else ""
+                next_text = (
+                    "\n\n".join(next_text_list_paragraphs[1:])
+                    if len(next_text_list_paragraphs) > 1
+                    else ""
+                )
 
             text_data[i] = {"page_number": page_current_text, "text": current_text}
             text_data[i + 1] = {"page_number": page_next_text, "text": next_text}
@@ -115,12 +126,7 @@ class PyMuPDFExtractor(DocumentExtractor):
 
             text_data
             if text:  # Only add if there's actual text content
-                text_data.append(
-                    {
-                        "text": text, 
-                        "page_number": page_num + 1  
-                    }
-                )
+                text_data.append({"text": text, "page_number": page_num + 1})
         text_data = self._join_paragraphs_between_pages(text_data)
         return text_data
 
@@ -171,7 +177,12 @@ class PyMuPDFExtractor(DocumentExtractor):
 
         tables = []
         for table_data in raw_result:
-            tables.append(Table(page=table_data["page_num"], content="Table content would be processed here"))
+            tables.append(
+                Table(
+                    page=table_data["page_num"],
+                    content="Table content would be processed here",
+                )
+            )
         return tables
 
     def _format_images_data(self, raw_result) -> list[Image]:
@@ -183,14 +194,23 @@ class PyMuPDFExtractor(DocumentExtractor):
 
         images = []
         for img_data in raw_result:
-            images.append(Image(page=img_data["page_num"], format=img_data["format"], data=img_data["data"]))
+            images.append(
+                Image(
+                    page=img_data["page_num"],
+                    format=img_data["format"],
+                    data=img_data["data"],
+                )
+            )
         return images
 
     def _format_text_data(self, text_result) -> list[Text]:
         """
         Convert raw text data to Text objects organized by page.
         """
-        pages = [Text(page=page_data['page_number'], text=page_data['text']) for page_data in text_result]
+        pages = [
+            Text(page=page_data["page_number"], text=page_data["text"])
+            for page_data in text_result
+        ]
         return pages
 
 
@@ -201,8 +221,12 @@ class DoclingPDFExtractor(DocumentExtractor):
 
     def __init__(self):
         super().__init__()
-        self.docling_extractor_without_ocr = self._generate_docling_pdf_extractor(use_ocr=False)
-        self.docling_extractor_with_ocr = self._generate_docling_pdf_extractor(use_ocr=True)
+        self.docling_extractor_without_ocr = self._generate_docling_pdf_extractor(
+            use_ocr=False
+        )
+        self.docling_extractor_with_ocr = self._generate_docling_pdf_extractor(
+            use_ocr=True
+        )
 
     def extract_document_data(self, document_path: str) -> dict:
         """
@@ -247,7 +271,9 @@ class DoclingPDFExtractor(DocumentExtractor):
         pipeline_options.do_table_structure = True  # pick what you need
         docling_extractor = DocumentConverter(
             format_options={
-                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)  # switch to beta PDF backend
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options
+                )  # switch to beta PDF backend
             }
         )
         return docling_extractor
@@ -278,12 +304,17 @@ class DoclingPDFExtractor(DocumentExtractor):
 
     def _extract_text(self, text_result) -> list[Text]:
         # extract text from docling result to a dictionary
-        text_found = [(text_item["prov"][0]["page_no"], text_item["text"]) for text_item in text_result]
+        text_found = [
+            (text_item["prov"][0]["page_no"], text_item["text"])
+            for text_item in text_result
+        ]
 
         # group text by page number
         page_data = defaultdict(str)
         for page_number, page_text in text_found:
-            page_data[page_number] += (" " + page_text) if page_data[page_number] else page_text
+            page_data[page_number] += (
+                (" " + page_text) if page_data[page_number] else page_text
+            )
         # create a list of Page objects
         pages = [Text(page=page, text=text) for page, text in page_data.items()]
         return pages

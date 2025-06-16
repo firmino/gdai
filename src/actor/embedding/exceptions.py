@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class InvalidAPIKeyException(Exception):
     """
     Exception raised when an invalid API key is provided.

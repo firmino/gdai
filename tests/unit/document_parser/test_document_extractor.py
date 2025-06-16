@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import os
+
 import pytest
+
 from src.actor.extractor.document_extractor import DoclingPDFExtractor
 
 
@@ -15,7 +19,9 @@ class TestParserDocumentExtractor:
 
     @pytest.fixture
     def long_pdf_with_text_and_images(self, file_path):
-        doc_full_path = os.path.join(file_path, "document_large_with_text_and_image.pdf")
+        doc_full_path = os.path.join(
+            file_path, "document_large_with_text_and_image.pdf"
+        )
         return doc_full_path
 
     @pytest.fixture
@@ -32,7 +38,9 @@ class TestParserDocumentExtractor:
     def extractor(self):
         return DoclingPDFExtractor()
 
-    def test_docling_extract_pdf_large_with_text_and_images(self, extractor, long_pdf_with_text_and_images):
+    def test_docling_extract_pdf_large_with_text_and_images(
+        self, extractor, long_pdf_with_text_and_images
+    ):
         extracted_text = extractor.extract_document_data(long_pdf_with_text_and_images)
         num_pages = len(extracted_text.texts)
         assert num_pages == 28  # 28 pages in the document

@@ -1,20 +1,26 @@
-from src.shared.database import PGVectorDatabase
-from src.shared.schema import DocumentChunk, ChunkQueryResult
-from typing import List
+from __future__ import annotations
+
 import logging
 
+from src.shared.database import PGVectorDatabase
+from src.shared.schema import ChunkQueryResult, DocumentChunk
+
 logger = logging.getLogger("SEARCH_REPOSITORY")
+
 
 class SearchRepository:
     """
     Repository for managing search-related database operations.
     """
+
     def __init__(self):
         """
         Initialize repository.
         """
 
-    async def create_message_entry(self, tenant_id: str, query_id: str, query_text: str) -> str:
+    async def create_message_entry(
+        self, tenant_id: str, query_id: str, query_text: str
+    ) -> str:
         """
         Create a new message entry in the database.
 
@@ -34,13 +40,17 @@ class SearchRepository:
                     RETURNING id
                 """
                 result = await conn.fetchval(query, tenant_id, query_id, query_text)
-                logger.info(f"Created message entry with ID: {result} for tenant: {tenant_id}, query_id: {query_id}")
+                logger.info(
+                    f"Created message entry with ID: {result} for tenant: {tenant_id}, query_id: {query_id}"
+                )
                 return result
         except Exception as e:
             logger.error(f"Error creating message entry: {e}")
             raise
 
-    async def get_chunks_by_vector_similarity(self, tenant_id: str, query_id: str,  query_embedding: List[float], limit: int) -> List[ChunkQueryResult]:
+    async def get_chunks_by_vector_similarity(
+        self, tenant_id: str, query_id: str, query_embedding: list[float], limit: int
+    ) -> list[ChunkQueryResult]:
         """
         Get document chunks by vector similarity.
 
@@ -55,16 +65,16 @@ class SearchRepository:
         try:
             async with PGVectorDatabase.get_connection() as conn:
                 query = """
-                    SELECT dc.id as chunk_id,  
-                           dc.tenant_id as tenant_id, 
-                           dc.chunk_text as chunk_text, 
-                           dc.page_number as page_number, 
-                           dc.begin_offset as begin_offset, 
-                           dc.end_offset as end_offset, 
-                           dc.fk_doc_id as doc_id, 
+                    SELECT dc.id as chunk_id,
+                           dc.tenant_id as tenant_id,
+                           dc.chunk_text as chunk_text,
+                           dc.page_number as page_number,
+                           dc.begin_offset as begin_offset,
+                           dc.end_offset as end_offset,
+                           dc.fk_doc_id as doc_id,
                            dc.embedding <-> $2 as similarity_score,
-                           d.name as doc_name 
-                    FROM document_chunk dc 
+                           d.name as doc_name
+                    FROM document_chunk dc
                          INNER JOIN document d ON dc.fk_doc_id = d.id
                     WHERE dc.tenant_id = $1
                     ORDER BY dc.embedding <-> $2
@@ -75,19 +85,22 @@ class SearchRepository:
                 result = []
                 for row in rows:
                     chunk = DocumentChunk(
-                        tenant_id= row["tenant_id"],
-                        chunk_id= row["chunk_id"],
-                        doc_id= row["doc_id"],
-                        doc_name= row['doc_name'],
-                        chunk_text= row["chunk_text"],
-                        page_number= row["page_number"],
-                        begin_offset= row["begin_offset"],
-                        end_offset= row["end_offset"])
-                    
-                    chunk_result = ChunkQueryResult(tenant_id=row["tenant_id"], 
-                                                    query_id=query_id, 
-                                                    chunk=chunk, 
-                                                    similarity=row["similarity_score"])
+                        tenant_id=row["tenant_id"],
+                        chunk_id=row["chunk_id"],
+                        doc_id=row["doc_id"],
+                        doc_name=row["doc_name"],
+                        chunk_text=row["chunk_text"],
+                        page_number=row["page_number"],
+                        begin_offset=row["begin_offset"],
+                        end_offset=row["end_offset"],
+                    )
+
+                    chunk_result = ChunkQueryResult(
+                        tenant_id=row["tenant_id"],
+                        query_id=query_id,
+                        chunk=chunk,
+                        similarity=row["similarity_score"],
+                    )
                     result.append(chunk_result)
                 return result
         except Exception as e:
@@ -126,17 +139,21 @@ class SearchRepository:
         try:
             async with PGVectorDatabase.get_connection() as conn:
                 query = """
-                    UPDATE message 
-                    SET result = $1, status = 'completed' 
+                    UPDATE message
+                    SET result = $1, status = 'completed'
                     WHERE id = $2
                 """
                 await conn.execute(query, text, message_id)
-                logger.info(f"Updated message {message_id} text and status to completed")
+                logger.info(
+                    f"Updated message {message_id} text and status to completed"
+                )
         except Exception as e:
             logger.error(f"Error updating message text for {message_id}: {e}")
             raise
 
-    async def add_chunks_to_message(self, message_id: str, chunks: List[ChunkQueryResult]) -> None:
+    async def add_chunks_to_message(
+        self, message_id: str, chunks: list[ChunkQueryResult]
+    ) -> None:
         """
         Add chunks to a message.
 
@@ -153,7 +170,7 @@ class SearchRepository:
                         INSERT INTO chunk_message (fk_message_id, fk_document_chunk_id)
                         VALUES ($1, $2)
                     """
-         
+
                     await conn.execute(query, message_id, chunk.chunk.chunk_id)
                 logger.info(f"Added {len(chunks)} chunks to message ID: {message_id}")
         except Exception as e:

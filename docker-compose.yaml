@@ -1,6 +1,4 @@
-
 services:
-  
   pgvector:
     image: ankane/pgvector:latest
     hostname: pgvector
@@ -31,10 +29,10 @@ services:
     labels:
       NAME: "rabbitmq1"
     volumes:
-    - rabbitmq_data:/var/lib/rabbitmq 
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - app_network
-       
+
 volumes:
   pgvector_data:
   rabbitmq_data:

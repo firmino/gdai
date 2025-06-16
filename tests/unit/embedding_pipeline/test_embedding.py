@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import os
+
 import pytest
 from dotenv import load_dotenv
+
 from src.actor.embedding.exceptions import InvalidAPIKeyException
 from src.shared.embedding_model import CohereEmbeddingModel
 
 
 class TestEmbeddingModel:
-
     @pytest.mark.filterwarnings("ignore::DeprecationWarning:cohere.*")
     @pytest.mark.asyncio(loop_scope="module")
     async def test_generate_text_embedding_cohere(self):

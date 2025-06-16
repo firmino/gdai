@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field, field_validator, ValidationInfo
-from typing import Optional
+from __future__ import annotations
+
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
+
 
 class Text(BaseModel):
     """
@@ -111,12 +113,12 @@ class Document(BaseModel):
         images (Optional[list[Image]]): List of images extracted from the document, if any.
     """
 
-    tenant_id: Optional[str] = Field(default="")
-    doc_id: Optional[str] = Field(default="")
+    tenant_id: str | None = Field(default="")
+    doc_id: str | None = Field(default="")
     doc_name: str
     texts: list[Text]
-    tables: Optional[list[Table]] = Field(default_factory=list)
-    images: Optional[list[Image]] = Field(default_factory=list)
+    tables: list[Table] | None = Field(default_factory=list)
+    images: list[Image] | None = Field(default_factory=list)
 
     def __str__(self) -> str:
         """
@@ -152,7 +154,7 @@ class DocumentChunk(BaseModel):
     page_number: int = Field(ge=0)  # Must be >= 0
     begin_offset: int = Field(ge=0)  # Must be >= 0
     end_offset: int = Field(ge=0)  # Must be >= 0
-    embedding: Optional[list[float]] = Field(default_factory=list)
+    embedding: list[float] | None = Field(default_factory=list)
 
     def __str__(self) -> str:
         """
@@ -180,7 +182,9 @@ class DocumentChunk(BaseModel):
         """
         begin_offset = info.data["begin_offset"]
         if begin_offset is None:
-            raise ValueError("begin_offset must be provided before validating end_offset")
+            raise ValueError(
+                "begin_offset must be provided before validating end_offset"
+            )
         if value < begin_offset:
             raise ValueError("end_offset must be greater than or equal to begin_offset")
         return value
@@ -188,9 +192,9 @@ class DocumentChunk(BaseModel):
 
 class QueryInput(BaseModel):
     """Represents a user query with search parameters.
-    
+
     Used to structure and validate search parameters submitted by users.
-    
+
     Attributes:
         tenant_id: Identifier for the tenant context of the query.
         query: The search query text (1-1000 characters).
@@ -201,11 +205,10 @@ class QueryInput(BaseModel):
     tenant_id: str
     query: str = Field(min_length=1, max_length=1000)
     num_chunks: int = Field(ge=1, le=1000, default=10)
-   
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the QueryInput.
-        
+
         Returns:
             A string displaying the query and parameters.
         """
@@ -214,15 +217,16 @@ class QueryInput(BaseModel):
 
 class ChunkQueryResult(BaseModel):
     """Represents a single chunk result from a search query.
-    
+
     Stores individual search results with their relevance scores.
-    
+
     Attributes:
         tenant_id: Identifier for the tenant context.
         query: The search query text that produced this result.
         chunk: The document chunk that matches the query.
         similarity: Similarity score between the query and the chunk.
     """
+
     tenant_id: str
     query_id: str
     chunk: DocumentChunk
@@ -230,18 +234,19 @@ class ChunkQueryResult(BaseModel):
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the ChunkQueryResult.
-        
+
         Returns:
             A string displaying query, chunk ID, and similarity score.
         """
         return f"ChunkQueryResult(query={self.query_id}, chunk_id={self.chunk.chunk_id}, similarity={self.similarity})"
 
+
 class QueryOutput(BaseModel):
     """Represents the complete response to a query.
-    
-    Encapsulates the complete response to a user query, including both 
+
+    Encapsulates the complete response to a user query, including both
     the generated answer and the supporting evidence chunks.
-    
+
     Attributes:
         tenant_id: Identifier for the tenant context.
         query: The original search query text.
@@ -250,6 +255,7 @@ class QueryOutput(BaseModel):
         num_chunks: Number of chunks used in the response (0-1000, default: 0).
         temperature: Temperature value used for answer generation (0.0-1.0, default: 0.5).
     """
+
     tenant_id: str
     query: str
     answer: str
@@ -259,7 +265,7 @@ class QueryOutput(BaseModel):
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the QueryOutput.
-        
+
         Returns:
             A string displaying query, answer, and chunk count.
         """

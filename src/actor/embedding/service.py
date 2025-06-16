@@ -1,18 +1,28 @@
 """Module for processing documents through an embedding pipeline."""
 
-import os
+from __future__ import annotations
+
 import json
+import os
+
 import aiofiles
-from src.shared.schema import Document, DocumentChunk
-from src.shared.embedding_model import EmbeddingModel
+
 from src.actor.embedding.repository import DocumentRepository
+from src.shared.embedding_model import EmbeddingModel
 from src.shared.logger import logger
+from src.shared.schema import Document, DocumentChunk
 
 
 class EmbeddingDocumentService:
     """Service for processing documents through an embedding pipeline."""
 
-    def __init__(self, embedding_model: EmbeddingModel, document_repository: DocumentRepository, chunk_size: int = 1000, chunk_overlap: int = 50):
+    def __init__(
+        self,
+        embedding_model: EmbeddingModel,
+        document_repository: DocumentRepository,
+        chunk_size: int = 1000,
+        chunk_overlap: int = 50,
+    ):
         """Initialize with embedding model, repository, and chunking parameters."""
         self.embedding_model: EmbeddingModel = embedding_model
         self.chunk_size: int = chunk_size
@@ -25,7 +35,9 @@ class EmbeddingDocumentService:
         """Process document: load, chunk, embed, and store in repository."""
         document = await self._load_document(document_path)
         document_chunks = await self._chunk_document(document)
-        logger.info(f"Document {document.doc_name} has {len(document_chunks)} chunks after processing.")
+        logger.info(
+            f"Document {document.doc_name} has {len(document_chunks)} chunks after processing."
+        )
         await self._embed_chunks(document_chunks, self.embedding_model)
         await self.repository.insert_document(document, document_chunks)
 
@@ -38,12 +50,16 @@ class EmbeddingDocumentService:
             async with aiofiles.open(document_path, mode="r") as f:
                 contents = await f.read()
         except Exception as e:
-            raise FileNotFoundError(f"Could not read document file {document_path}: {e}")
+            raise FileNotFoundError(
+                f"Could not read document file {document_path}: {e}"
+            )
         document_data = json.loads(contents)
         document = Document(**document_data)
         return document
 
-    async def _chunk_page(self, tenant_id, doc_id, doc_name, page_number, text) -> list[DocumentChunk]:
+    async def _chunk_page(
+        self, tenant_id, doc_id, doc_name, page_number, text
+    ) -> list[DocumentChunk]:
         page_size = len(text)
         page_chunks = []
 
@@ -62,13 +78,15 @@ class EmbeddingDocumentService:
             )
             page_chunks.append(chunk)
         return page_chunks
-    
-    async def _chunk_document_by_paragraph(self,  tenant_id, doc_id, doc_name, page_number, text) -> list[DocumentChunk]:
+
+    async def _chunk_document_by_paragraph(
+        self, tenant_id, doc_id, doc_name, page_number, text
+    ) -> list[DocumentChunk]:
         """Split document pages into chunks by paragraphs."""
 
         page_chunks = []
-    
-        paragraphs = text.text.split("\n\n") 
+
+        paragraphs = text.text.split("\n\n")
         for j, paragraph in enumerate(paragraphs):
             chunk_id = f"{tenant_id}_{doc_name}_{doc_id}_{page_number}_{j}"
             chunk = DocumentChunk(
@@ -85,7 +103,9 @@ class EmbeddingDocumentService:
 
         return page_chunks
 
-    async def _chunk_document(self, doc: str, chunk_by_paragraph=True) -> list[DocumentChunk]:
+    async def _chunk_document(
+        self, doc: str, chunk_by_paragraph=True
+    ) -> list[DocumentChunk]:
         """Split document pages into chunks with specified overlap."""
 
         page_chunks = []
@@ -94,16 +114,34 @@ class EmbeddingDocumentService:
         if not chunk_by_paragraph:
             for i in range(num_pages):
                 page_number = i + 1
-                page_chunks.extend(await self._chunk_page(doc.tenant_id, doc.doc_id, doc.doc_name, page_number, doc.texts[i]))
+                page_chunks.extend(
+                    await self._chunk_page(
+                        doc.tenant_id,
+                        doc.doc_id,
+                        doc.doc_name,
+                        page_number,
+                        doc.texts[i],
+                    )
+                )
 
         if chunk_by_paragraph:
             for i in range(num_pages):
                 page_number = i + 1
-                page_chunks.extend(await self._chunk_document_by_paragraph(doc.tenant_id, doc.doc_id, doc.doc_name, page_number, doc.texts[i]))
-        
+                page_chunks.extend(
+                    await self._chunk_document_by_paragraph(
+                        doc.tenant_id,
+                        doc.doc_id,
+                        doc.doc_name,
+                        page_number,
+                        doc.texts[i],
+                    )
+                )
+
         return page_chunks
 
-    async def _embed_chunks(self, chunks: list[DocumentChunk], embedding_model: EmbeddingModel) -> None:
+    async def _embed_chunks(
+        self, chunks: list[DocumentChunk], embedding_model: EmbeddingModel
+    ) -> None:
         """Generate embeddings for text chunks using the provided model."""
 
         batch_size = 64
@@ -111,5 +149,5 @@ class EmbeddingDocumentService:
             batch = chunks[i : i + batch_size]
             texts = [chunk.chunk_text[:1024] for chunk in batch]
             embeddings = await embedding_model.generate_texts_embeddings(texts)
-            for chunk, embedding in zip(batch, embeddings):
+            for chunk, embedding in zip(batch, embeddings, strict=False):
                 chunk.embedding = embedding

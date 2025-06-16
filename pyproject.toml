@@ -15,7 +15,10 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "langchain[openai]>=0.3.25",
     "langgraph>=0.4.7",
+    "mkdocs-dracula-theme>=1.0.7",
+    "mkdocs>=1.6.1",
     "pgvector>=0.4.0",
+    "pre-commit>=4.2.0",
     "python-dotenv>=1.1.0",
     "rich>=13.9.4",
     "scipy>=1.15.2",
@@ -23,14 +26,25 @@ dependencies = [
     "taskipy>=1.14.1",
 ]
 
-[tool.ruff]
-line-length = 200
+
+
 
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
 ]
+
+
+# [tool.ruff]
+# line-length = 120
+# target-version = "py310"
+
+# [tool.ruff.lint]
+# select = ["E", "F", "UP", "I", "RUF"]
+# ignore = ["E203", "E501"]
+
+
 
 
 [tool.pytest.ini_options]
@@ -41,5 +55,3 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.taskipy.tasks]
 runserver = { cmd = "uvicorn src.api.app:app --reload", help = "Execute FastAPI server in development mode" }
 tests = { cmd = "pytest", help = "Run all unit tests" }
-
-

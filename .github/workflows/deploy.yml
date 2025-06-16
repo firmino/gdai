@@ -2,7 +2,7 @@ name: Deploy to Server
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
@@ -14,9 +14,9 @@ jobs:
           host: ${{ secrets.SSH_HOST_DEPLOY }}
           username: ${{ secrets.SSH_USER_DEPLOY }}
           key: ${{ secrets.SSH_PRIVATE_KEY_DEPLOY }}
-          port: ${{ secrets.SSH_PORT_DEPLOY }} 
+          port: ${{ secrets.SSH_PORT_DEPLOY }}
           script: |
             cd /home/gdai/gdai/
             git pull origin main
-            docker-compose --profile production down           
-            docker-compose --profile production up -d 
+            docker-compose --profile production down
+            docker-compose --profile production up -d
