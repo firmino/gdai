@@ -1,3 +1,33 @@
+# G-DAI Documentation
+
+Welcome to the documentation for **G-DAI**, a multi-tenant vector store with advanced semantic search and auditable answer capabilities.
+
+## What is G-DAI?
+G-DAI is an open-source platform that enables organizations to:
+- Store and manage document embeddings in a vector database.
+- Support multiple tenants (organizations, teams, or projects) with isolated data.
+- Use semantic search and Retrieval-Augmented Generation (RAG) to answer questions based on ingested documents.
+- Ensure every answer is auditable and traceable to its original source.
+
+## Key Features
+- **Multi-Tenant Management**: Isolate data and search for different clients.
+- **Semantic Search**: Retrieve information using vector similarity and advanced semantic techniques.
+- **RAG and Beyond**: Combine retrieval with generative models and other semantic approaches.
+- **Auditable Answers**: Every answer includes references to the source documents.
+- **API-First**: RESTful API for integration.
+
+## Getting Started
+- [Installation](contributing.md#installation)
+- [Usage](contributing.md#usage)
+- [API Reference](about.md)
+
+## Learn More
+- [Contributing](contributing.md)
+- [Code of Conduct](code_of_conduct.md)
+- [About the Project](about.md)
+
+---
+
 # GDAI - Generative Document AI
 
 GDAI is a containerized, AI-powered application that leverages a set of specialized services to provide semantic search, secure user authentication, and a scalable API. The application uses Docker Compose for local development and production deployment, ensuring all services work together seamlessly.

@@ -16,5 +16,4 @@ jobs:
           python-version: 3.x
       - run: pip install mkdocs
       - run: pip install mkdocs-dracula-theme
-      - run: mkdocs build
       - run: mkdocs gh-deploy --force
